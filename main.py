@@ -14,7 +14,18 @@ blurPeople = False
 
 
 # Function to format numbers into a specific format
-def toPlaces(num: Any, pre, post=0, func=round):
+def toPlaces(num: Any, pre=0, post=0, func=round):
+  """Function to format numbers into a specific format
+
+  Args:
+      num (Any): number to format
+      pre (int, optional): about of places before .. Defaults to 0.
+      post (int, optional): amount of places after .. Defaults to 0.
+      func (func, optional): function to use for trimming decimal places. Defaults to round.
+
+  Returns:
+      str: of the number formatted to the desired place counts
+  """
   # Split the number into integer and decimal parts
   num = str(num).split(".")
 
