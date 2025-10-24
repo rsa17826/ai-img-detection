@@ -79,7 +79,7 @@ def resize_with_aspect_ratio(image, target_width, target_height):
 # Initialize variables for frame rate calculation
 prev_time = time.time()
 # Load pre-trained neural network model
-net = cv2.dnn.readNetFromTensorflow("ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb", "ssd_mobilenet_v2_coco_2018_03_29/graph.pbtxt")
+net = cv2.dnn.readNetFromTensorflow("frozen_inference_graph.pb", "graph.pbtxt")
 # Define class names for object detection
 class_names = {
   1: "person",
