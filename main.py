@@ -2,52 +2,65 @@ import cv2
 from typing import Any
 import misc, time
 
-import cv2
-
+# Initialize video capture from the second camera device
 cap = cv2.VideoCapture(1)
 
+# Define screen width and height
 screen_w, screen_h = 1920, 1080
+# Set minimum confidence level for object detection
 minconfidence = 0.95
+# Flag to blur detected people
 blurPeople = False
 
 
+# Function to format numbers into a specific format
 def toPlaces(num: Any, pre, post=0, func=round):
+  # Split the number into integer and decimal parts
   num = str(num).split(".")
 
   if len(num) == 1:
-    num.append("")
+    num.append("")  # Add empty decimal part if not present
 
   if pre is not None:
+    # Keep only the last 'pre' digits of the integer part
     num[0] = num[0][-pre:]
-    while len(num[0]) < pre:
+    while len(num[0]) < pre:  # Pad with zeros
       num[0] = "0" + num[0]
 
+  # Extract the relevant decimal digit based on 'post'
   temp = num[1][post : post + 1] if len(num[1]) > post else "0"
-  num[1] = num[1][:post]
+  num[1] = num[1][:post]  # Keep only first 'post' digits
 
+  # Pad decimal part with zeros
   while len(num[1]) < post:
     num[1] += "0"
 
   if post > 0:
+    # Round the last digit of the decimal part
     temp = func(float(num[1][-1] + "." + temp))
     num[1] = list(num[1])
-    num[1][-1] = str(temp)  # Replace last character
+    num[1][-1] = str(temp)
     num[1] = "".join(num[1])
-    num = ".".join(num)
+    num = ".".join(num)  # Combine back into single string
   else:
     num = num[0]
 
   return num
 
+
+# Function to resize an image while maintaining aspect ratio
 def resize_with_aspect_ratio(image, target_width, target_height):
   h, w = image.shape[:2]
-  scale = min(target_width / w, (target_height - 26) / h)
-  new_w, new_h = int(w * scale), int(h * scale)
-  return cv2.resize(image, (new_w, new_h))
+  scale = min(target_width / w, (target_height - 26) / h)  # Calculate scale factor
+  new_w, new_h = int(w * scale), int(h * scale)  # New dimensions
+  return cv2.resize(image, (new_w, new_h))  # Resize image
 
 
+# Initialize variables for frame rate calculation
 prev_time = time.time()
+# Load pre-trained neural network model
 net = cv2.dnn.readNetFromTensorflow("frozen_inference_graph.pb", "graph.pbtxt")
+# Define class names for object detection
 class_names = {
   1: "person",
   2: "bicycle",
@@ -132,25 +145,35 @@ class_names = {
 }
 
 while True:
+  # Capture a frame from the camera
   ret, frame = cap.read()
-  frame = cv2.flip(frame, 1)
-  gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)
+  frame = cv2.flip(frame, 1)  # Flip the frame for a mirror effect
+  gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)  # Convert to grayscale
+  # Create a blob from the image for the neural network
   blob = cv2.dnn.blobFromImage(frame, size=(300, 300), swapRB=False)
-  net.setInput(blob)
-  detections = net.forward()
-  objcount = 0
+  net.setInput(blob)  # Set the input for the network
+  detections = net.forward()  # Perform forward pass (object detection)
+
+  objcount = 0  # Initialize object count
+
+  # Loop through detected objects
   for i in range(detections.shape[2]):
-    class_id = int(detections[0, 0, i, 1])
+    class_id = int(detections[0, 0, i, 1])  # Get the class ID
     if not class_id:
-      continue
-    confidence = detections[0, 0, i, 2]
+      continue  # Continue if class ID is 0 (not detected)
+
+    confidence = detections[0, 0, i, 2]  # Get confidence score
     if confidence < minconfidence:
-      continue
-    objcount += 1
+      continue  # Skip detections below confidence threshold
+
+    objcount += 1  # Increment object count
+    # Get bounding box coordinates
     x = int(detections[0, 0, i, 3] * frame.shape[1])
     y = int(detections[0, 0, i, 4] * frame.shape[0])
     w = int(detections[0, 0, i, 5] * frame.shape[1])
     h = int(detections[0, 0, i, 6] * frame.shape[0])
+
+    # Draw the class label on the frame
     cv2.putText(
       frame,
       class_names[class_id],
@@ -160,6 +183,7 @@ while True:
       (255, 255, 255),
       2,
     )
+    # Display confidence score below the label
     cv2.putText(
       frame,
       str(confidence),
@@ -169,10 +193,14 @@ while True:
       (255, 255, 255),
       2,
     )
+
+    # Blur detected people if the flag is set
     if class_id == 1 and blurPeople:
       frame[y : y + h, x : x + w] = cv2.GaussianBlur(
         frame[y : y + h, x : x + w], (15, 15), 0
       )
+
+    # Draw a rectangle around the detected object
     cv2.rectangle(
       frame,
       (x, y),
@@ -184,9 +212,11 @@ while True:
       ),
       2,
     )
+
+  # Calculate and display frames per second (FPS)
   curr_time = time.time()
   fps = 1 / (curr_time - prev_time)
-  prev_time = curr_time
+  prev_time = curr_time  # Update previous time for next FPS calculation
 
   cv2.putText(
     frame,
@@ -198,6 +228,7 @@ while True:
     2,
   )
 
+  # Display the total count of detected objects
   cv2.putText(
     frame,
     "OBJECT COUNT: " + str(objcount),
@@ -207,18 +238,20 @@ while True:
     (255, 255, 255),
     2,
   )
-  # cv2.imshow("Webcam", frame)
+
+  # Show the processed frame in a window with aspect ratio adjustments
   cv2.imshow("Webcam", resize_with_aspect_ratio(frame, screen_w, screen_h))
 
+  # Handle key events for quitting or saving the frame as an image
   match chr(cv2.waitKey(1) & 0xFF):
     case "q":
-      break
+      break  # Break the loop if 'q' is pressed
     case "w":
-      cv2.imwrite("./img/frame.png", frame)
+      cv2.imwrite("./img/frame.png", frame)  # Save the current frame as an image
 
+# Release the video capture and destroy all OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
-
 
 # find frame in other frame
 # cv2.drawMatches()
