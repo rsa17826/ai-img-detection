@@ -2,7 +2,7 @@
 
 run 
 ```shell
-git clone git@github.com:rsa17826/ai-img-detection.git ./ai-img-detection
+git clone https://github.com/rsa17826/ai-img-detection.git ./ai-img-detection
 cd ./ai-img-detection
 wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coco_2018_03_29.tar.gz -o ./zip.tar.gz
 Expand-Archive -Path "./zip.tar.gz" -DestinationPath "."
