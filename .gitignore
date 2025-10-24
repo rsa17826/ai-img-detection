@@ -2,3 +2,14 @@ misc
 logs
 img
 __pycache__
+.mypy_cache
+.venv
+saved_model
+checkpoint
+frozen_inference_graph.pb
+graph.pbtxt
+highScore.txt
+model.ckpt.data-00000-of-00001
+model.ckpt.index
+model.ckpt.meta
+pipeline.config
