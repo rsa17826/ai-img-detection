@@ -1,16 +1,25 @@
 import cv2
 from typing import Any
-import misc, time
+import misc, time, requests
 
 # Initialize video capture from the second camera device
-cap = cv2.VideoCapture(0)
+cap = cv2.VideoCapture(1)
 
 # Define screen width and height
 screen_w, screen_h = 1920, 1080
 # Set minimum confidence level for object detection
-minconfidence = 0.7
+minconfidence = 0.5
 # Flag to blur detected people
 blurPeople = False
+sendOnPersonEnter = False
+
+
+def sendPersonEntered(frame):
+  return
+  # requests.post(
+  #   "https://ntfy.sh/test",
+  #   data="person entered the frame".encode(encoding="utf-8"),
+  # )
 
 
 # Function to format numbers into a specific format
@@ -18,13 +27,13 @@ def toPlaces(num: Any, pre=0, post=0, func=round):
   """Function to format numbers into a specific format
 
   Args:
-      num (Any): number to format
-      pre (int, optional): about of places before .. Defaults to 0.
-      post (int, optional): amount of places after .. Defaults to 0.
-      func (func, optional): function to use for trimming decimal places. Defaults to round.
+    num (Any): number to format
+    pre (int, optional): about of places before .. Defaults to 0.
+    post (int, optional): amount of places after .. Defaults to 0.
+    func (func, optional): function to use for trimming decimal places. Defaults to round.
 
   Returns:
-      str: of the number formatted to the desired place counts
+    str: of the number formatted to the desired place counts
   """
   # Split the number into integer and decimal parts
   num = str(num).split(".")
@@ -70,7 +79,7 @@ def resize_with_aspect_ratio(image, target_width, target_height):
 # Initialize variables for frame rate calculation
 prev_time = time.time()
 # Load pre-trained neural network model
-net = cv2.dnn.readNetFromTensorflow("frozen_inference_graph.pb", "graph.pbtxt")
+net = cv2.dnn.readNetFromTensorflow("ssd_mobilenet_v2_coco_2018_03_29/frozen_inference_graph.pb", "ssd_mobilenet_v2_coco_2018_03_29/graph.pbtxt")
 # Define class names for object detection
 class_names = {
   1: "person",
@@ -155,7 +164,9 @@ class_names = {
   90: "toothbrush",
 }
 
+personExistdLastFrame = False
 while True:
+  personExistdThisFrame = False
   # Capture a frame from the camera
   ret, frame = cap.read()
   frame = cv2.flip(frame, 1) # Flip the frame for a mirror effect
@@ -205,6 +216,8 @@ while True:
       2,
     )
 
+    if class_id == 1 and sendOnPersonEnter:
+      personExistdThisFrame = True
     # Blur detected people if the flag is set
     if class_id == 1 and blurPeople:
       frame[y : y + h, x : x + w] = cv2.GaussianBlur(
@@ -252,7 +265,9 @@ while True:
 
   # Show the processed frame in a window with aspect ratio adjustments
   cv2.imshow("Webcam", resize_with_aspect_ratio(frame, screen_w, screen_h))
-
+  if personExistdThisFrame and not personExistdLastFrame:
+    sendPersonEntered(frame)
+  personExistdLastFrame = personExistdThisFrame
   # Handle key events for quitting or saving the frame as an image
   match chr(cv2.waitKey(1) & 0xFF):
     case "q":
@@ -263,6 +278,7 @@ while True:
 # Release the video capture and destroy all OpenCV windows
 cap.release()
 cv2.destroyAllWindows()
+
 
 # find frame in other frame
 # cv2.drawMatches()
