@@ -42,8 +42,10 @@ def jsSetminconfidence(val):
 @eel.expose
 def jsSetblurPeople(val):
   global blurPeople
+  print(val)
   blurPeople = bool(val)
   print(blurPeople)
+
 
 @eel.expose
 def jsSetsendOnPersonEnter(val):
@@ -270,7 +272,13 @@ while True:
     y = int(detections[0, 0, i, 4] * frame.shape[0])
     w = int(detections[0, 0, i, 5] * frame.shape[1])
     h = int(detections[0, 0, i, 6] * frame.shape[0])
-
+    if class_id == 1 and sendOnPersonEnter:
+      personExistdThisFrame = True
+    # Blur detected people if the flag is set
+    if class_id == 1 and blurPeople:
+      frame[y : y + h, x : x + w] = cv2.GaussianBlur(
+        frame[y : y + h, x : x + w], (15, 15), 0
+      )
     # Draw the class label on the frame
     cv2.putText(
       frame,
@@ -291,14 +299,6 @@ while True:
       (255, 255, 255),
       2,
     )
-
-    if class_id == 1 and sendOnPersonEnter:
-      personExistdThisFrame = True
-    # Blur detected people if the flag is set
-    if class_id == 1 and blurPeople:
-      frame[y : y + h, x : x + w] = cv2.GaussianBlur(
-        frame[y : y + h, x : x + w], (15, 15), 0
-      )
 
     # Draw a rectangle around the detected object
     cv2.rectangle(
@@ -343,15 +343,6 @@ while True:
   if personExistdThisFrame and not personExistdLastFrame:
     sendPersonEntered(frame)
   personExistdLastFrame = personExistdThisFrame
-  # Handle key events for quitting or saving the frame as an image
   if saveFrame:
     cv2.imwrite("./img/frame.png", frame) # Save the current frame as an image
     saveFrame = False
-
-# Release the video capture and destroy all OpenCV windows
-cap.release()
-cv2.destroyAllWindows()
-
-
-# find frame in other frame
-# cv2.drawMatches()

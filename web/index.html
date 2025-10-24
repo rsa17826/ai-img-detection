@@ -12,11 +12,10 @@
       const a = loadlib("allfuncs")
       ;(async () => {
         await a.bodyload()
-        a.listen("#captureBtn", "click", function (e) {
-          log(a.qs("#captureIdx").value)
-          log(eel.startCapture)
+        a.listen("#captureIdx", "change", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
         })
+        eel.startCapture(a.qs("#captureIdx").value)
         a.listen("#stopCaptureBtn", "click", function (e) {
           eel.stopCapture()
         })
@@ -24,15 +23,31 @@
           eel.quitApp()
           window.close()
         })
-        a.listen("#jsSetminconfidenceInput", ["input", "change"], function (e) {
-          eel.jsSetminconfidence(a.qs("#jsSetminconfidenceInput").value)
-        })
-        a.listen("#jsSetblurPeopleInput", ["input", "change"], function (e) {
-          eel.jsSetblurPeople(a.qs("#jsSetblurPeopleInput").value)
-        })
-        a.listen("#jsSetsendOnPersonEnterInput", ["input", "change"], function (e) {
-          eel.jsSetsendOnPersonEnter(a.qs("#jsSetsendOnPersonEnterInput").value)
-        })
+        a.listen(
+          "#setminconfidenceInput",
+          ["input", "change"],
+          function (e) {
+            eel.jsSetminconfidence(
+              a.qs("#setminconfidenceInput").value
+            )
+          }
+        )
+        a.listen(
+          "#setblurPeopleInput",
+          ["input", "change"],
+          function (e) {
+            eel.jsSetblurPeople(a.qs("#setblurPeopleInput").checked)
+          }
+        )
+        a.listen(
+          "#setsendOnPersonEnterInput",
+          ["input", "change"],
+          function (e) {
+            eel.jsSetsendOnPersonEnter(
+              a.qs("#setsendOnPersonEnterInput").checked
+            )
+          }
+        )
         a.listen("#saveFrame", "click", function (e) {
           eel.jsSaveFrame()
         })
@@ -45,49 +60,67 @@
     </script>
   </head>
   <style>
-    .v{
+    .v {
       display: flex;
       flex-direction: column;
     }
-    .h{
+    .h {
       display: flex;
       flex-direction: row;
+    }
+    .c{
+      align-items: center;
     }
   </style>
   <body>
     <div class="v">
-      <div class="h">
-        <input
-        type="number"
-        name="captureIdx"
-        id="captureIdx"
-        value="1"
-        />
-        <input
-        type="number"
-        name="jsSetminconfidenceInput"
-        id="jsSetminconfidenceInput"
-        step="0.01"
-        value=".5"
-        />
-        <input
-        type="checkbox"
-        name="jsSetblurPeopleInput"
-        id="jsSetblurPeopleInput"
-        checked="false"
-        />
-        <input
-        type="checkbox"
-        name="jsSetsendOnPersonEnterInput"
-        id="jsSetsendOnPersonEnterInput"
-        value="false"
-        />
-        <button id="captureBtn">▶️ start capture</button>
-        <button id="stopCaptureBtn">🟥 stop capture</button>
-        <button id="quitAppBtn">🚪</button>
-        <button id="saveFrame">save frame</button>
+      <div class="v c">
+        <div class="h">
+          <label for="captureIdx">Camera Index:</label>
+          <input
+            type="number"
+            name="captureIdx"
+            id="captureIdx"
+            value="1"
+          />
+          <button id="captureBtn">▶️ Start Capture</button>
+          <button id="stopCaptureBtn">🟥 Stop Capture</button>
+        </div>
+        <div class="h">
+          <label for="setminconfidenceInput">Min Confidence:</label>
+          <input
+            type="number"
+            name="setminconfidenceInput"
+            id="setminconfidenceInput"
+            step="0.01"
+            value="0.5"
+          />
+        </div>
+        <div class="h">
+          <label for="setblurPeopleInput">Blur People:</label>
+          <input
+            type="checkbox"
+            name="setblurPeopleInput"
+            id="setblurPeopleInput"
+            checked="false"
+          />
+
+          <label for="setsendOnPersonEnterInput"
+            >Send on Person Enter:</label
+          >
+          <input
+            type="checkbox"
+            name="setsendOnPersonEnterInput"
+            id="setsendOnPersonEnterInput"
+            value="false"
+          />
+        </div>
+        <div class="h">
+          <button id="quitAppBtn">🚪 Quit App</button>
+          <button id="saveFrame">Save Frame</button>
+        </div>
       </div>
-      <img id="cameraFeed"></img>
+      <img id="cameraFeed" alt="Camera Feed" />
     </div>
-    </body>
+  </body>
 </html>
