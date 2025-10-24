@@ -1,0 +1,5 @@
+@name inline comments should have only 1 space
+@file \.py$
+@regex (?<=\S)  #
+@replace  #
+@endregex

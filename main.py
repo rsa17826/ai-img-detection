@@ -3,12 +3,12 @@ from typing import Any
 import misc, time
 
 # Initialize video capture from the second camera device
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 
 # Define screen width and height
 screen_w, screen_h = 1920, 1080
 # Set minimum confidence level for object detection
-minconfidence = 0.95
+minconfidence = 0.7
 # Flag to blur detected people
 blurPeople = False
 
@@ -30,17 +30,17 @@ def toPlaces(num: Any, pre=0, post=0, func=round):
   num = str(num).split(".")
 
   if len(num) == 1:
-    num.append("")  # Add empty decimal part if not present
+    num.append("") # Add empty decimal part if not present
 
   if pre is not None:
     # Keep only the last 'pre' digits of the integer part
     num[0] = num[0][-pre:]
-    while len(num[0]) < pre:  # Pad with zeros
+    while len(num[0]) < pre: # Pad with zeros
       num[0] = "0" + num[0]
 
   # Extract the relevant decimal digit based on 'post'
   temp = num[1][post : post + 1] if len(num[1]) > post else "0"
-  num[1] = num[1][:post]  # Keep only first 'post' digits
+  num[1] = num[1][:post] # Keep only first 'post' digits
 
   # Pad decimal part with zeros
   while len(num[1]) < post:
@@ -52,7 +52,7 @@ def toPlaces(num: Any, pre=0, post=0, func=round):
     num[1] = list(num[1])
     num[1][-1] = str(temp)
     num[1] = "".join(num[1])
-    num = ".".join(num)  # Combine back into single string
+    num = ".".join(num) # Combine back into single string
   else:
     num = num[0]
 
@@ -62,9 +62,9 @@ def toPlaces(num: Any, pre=0, post=0, func=round):
 # Function to resize an image while maintaining aspect ratio
 def resize_with_aspect_ratio(image, target_width, target_height):
   h, w = image.shape[:2]
-  scale = min(target_width / w, (target_height - 26) / h)  # Calculate scale factor
-  new_w, new_h = int(w * scale), int(h * scale)  # New dimensions
-  return cv2.resize(image, (new_w, new_h))  # Resize image
+  scale = min(target_width / w, (target_height - 26) / h) # Calculate scale factor
+  new_w, new_h = int(w * scale), int(h * scale) # New dimensions
+  return cv2.resize(image, (new_w, new_h)) # Resize image
 
 
 # Initialize variables for frame rate calculation
@@ -158,26 +158,26 @@ class_names = {
 while True:
   # Capture a frame from the camera
   ret, frame = cap.read()
-  frame = cv2.flip(frame, 1)  # Flip the frame for a mirror effect
-  gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY)  # Convert to grayscale
+  frame = cv2.flip(frame, 1) # Flip the frame for a mirror effect
+  gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) # Convert to grayscale
   # Create a blob from the image for the neural network
   blob = cv2.dnn.blobFromImage(frame, size=(300, 300), swapRB=False)
-  net.setInput(blob)  # Set the input for the network
-  detections = net.forward()  # Perform forward pass (object detection)
+  net.setInput(blob) # Set the input for the network
+  detections = net.forward() # Perform forward pass (object detection)
 
-  objcount = 0  # Initialize object count
+  objcount = 0 # Initialize object count
 
   # Loop through detected objects
   for i in range(detections.shape[2]):
-    class_id = int(detections[0, 0, i, 1])  # Get the class ID
+    class_id = int(detections[0, 0, i, 1]) # Get the class ID
     if not class_id:
-      continue  # Continue if class ID is 0 (not detected)
+      continue # Continue if class ID is 0 (not detected)
 
-    confidence = detections[0, 0, i, 2]  # Get confidence score
+    confidence = detections[0, 0, i, 2] # Get confidence score
     if confidence < minconfidence:
-      continue  # Skip detections below confidence threshold
+      continue # Skip detections below confidence threshold
 
-    objcount += 1  # Increment object count
+    objcount += 1 # Increment object count
     # Get bounding box coordinates
     x = int(detections[0, 0, i, 3] * frame.shape[1])
     y = int(detections[0, 0, i, 4] * frame.shape[0])
@@ -227,7 +227,7 @@ while True:
   # Calculate and display frames per second (FPS)
   curr_time = time.time()
   fps = 1 / (curr_time - prev_time)
-  prev_time = curr_time  # Update previous time for next FPS calculation
+  prev_time = curr_time # Update previous time for next FPS calculation
 
   cv2.putText(
     frame,
@@ -256,9 +256,9 @@ while True:
   # Handle key events for quitting or saving the frame as an image
   match chr(cv2.waitKey(1) & 0xFF):
     case "q":
-      break  # Break the loop if 'q' is pressed
+      break # Break the loop if 'q' is pressed
     case "w":
-      cv2.imwrite("./img/frame.png", frame)  # Save the current frame as an image
+      cv2.imwrite("./img/frame.png", frame) # Save the current frame as an image
 
 # Release the video capture and destroy all OpenCV windows
 cap.release()
