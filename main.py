@@ -1,12 +1,82 @@
 import cv2
 from typing import Any
 import misc, time, requests
+import eel, os
+from threading import Thread
+import base64
 
-# Initialize video capture from the second camera device
-cap = cv2.VideoCapture(1)
+eel.init("web")
 
-# Define screen width and height
-screen_w, screen_h = 1920, 1080
+cap: Any = 0
+
+saveFrame = False
+
+
+@eel.expose
+def stopCapture():
+  global cap
+  cap = None
+
+
+@eel.expose
+def quitApp():
+  global cap
+  if cap:
+    cap.release()
+  os._exit(0)
+
+
+@eel.expose
+def jsSaveFrame():
+  global saveFrame
+  saveFrame = True
+
+
+@eel.expose
+def jsSetminconfidence(val):
+  global minconfidence
+  minconfidence = float(val)
+  print(minconfidence)
+
+
+@eel.expose
+def jsSetblurPeople(val):
+  global blurPeople
+  blurPeople = bool(val)
+  print(blurPeople)
+
+@eel.expose
+def jsSetsendOnPersonEnter(val):
+  global sendOnPersonEnter
+  sendOnPersonEnter = bool(val)
+  print(sendOnPersonEnter)
+
+
+@eel.expose
+def startCapture(idx):
+  global cap
+  idx = int(idx)
+  print(f"Attempting to start capture on camera index: {idx}")
+
+  cap = cv2.VideoCapture(idx)
+
+  if not cap.isOpened():
+    print(
+      f"Failed to open camera with index {idx}. Please check the index and try again."
+    )
+
+
+def send_frame(frame):
+  # Convert the frame to a format suitable for web
+  _, buffer = cv2.imencode(".jpg", frame) # Encode frame as JPEG
+  frame_bytes = buffer.tobytes() # Get bytes from the buffer
+  encoded_frame = base64.b64encode(frame_bytes).decode("utf-8") # Base64 encode
+  eel.receive_frame(encoded_frame) # Send to JavaScript
+
+
+Thread(target=lambda: eel.start(mode=None, port=15674)).start()
+os.system("start http://127.0.0.1:15674")
+
 # Set minimum confidence level for object detection
 minconfidence = 0.5
 # Flag to blur detected people
@@ -164,11 +234,17 @@ class_names = {
   90: "toothbrush",
 }
 
+
 personExistdLastFrame = False
 while True:
+  if not cap or not cap.isOpened():
+    continue
   personExistdThisFrame = False
   # Capture a frame from the camera
   ret, frame = cap.read()
+  if not ret:
+    print(frame, ret)
+    continue
   frame = cv2.flip(frame, 1) # Flip the frame for a mirror effect
   gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) # Convert to grayscale
   # Create a blob from the image for the neural network
@@ -263,17 +339,14 @@ while True:
     2,
   )
 
-  # Show the processed frame in a window with aspect ratio adjustments
-  cv2.imshow("Webcam", resize_with_aspect_ratio(frame, screen_w, screen_h))
+  send_frame(frame)
   if personExistdThisFrame and not personExistdLastFrame:
     sendPersonEntered(frame)
   personExistdLastFrame = personExistdThisFrame
   # Handle key events for quitting or saving the frame as an image
-  match chr(cv2.waitKey(1) & 0xFF):
-    case "q":
-      break # Break the loop if 'q' is pressed
-    case "w":
-      cv2.imwrite("./img/frame.png", frame) # Save the current frame as an image
+  if saveFrame:
+    cv2.imwrite("./img/frame.png", frame) # Save the current frame as an image
+    saveFrame = False
 
 # Release the video capture and destroy all OpenCV windows
 cap.release()

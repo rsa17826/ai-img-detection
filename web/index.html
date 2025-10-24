@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Hello, World!</title>
+
+    <!-- Include eel.js - note this file doesn't exist in the 'web' directory -->
+    <script type="text/javascript" src="/eel.js"></script>
+    <script type="text/javascript" src="./libloader.js"></script>
+    <script type="text/javascript" src="./allfuncs.js"></script>
+    <script type="text/javascript" src="./log.js"></script>
+    <script type="text/javascript">
+      const a = loadlib("allfuncs")
+      ;(async () => {
+        await a.bodyload()
+        a.listen("#captureBtn", "click", function (e) {
+          log(a.qs("#captureIdx").value)
+          log(eel.startCapture)
+          eel.startCapture(a.qs("#captureIdx").value)
+        })
+        a.listen("#stopCaptureBtn", "click", function (e) {
+          eel.stopCapture()
+        })
+        a.listen("#quitAppBtn", "click", function (e) {
+          eel.quitApp()
+          window.close()
+        })
+        a.listen("#jsSetminconfidenceInput", ["input", "change"], function (e) {
+          eel.jsSetminconfidence(a.qs("#jsSetminconfidenceInput").value)
+        })
+        a.listen("#jsSetblurPeopleInput", ["input", "change"], function (e) {
+          eel.jsSetblurPeople(a.qs("#jsSetblurPeopleInput").value)
+        })
+        a.listen("#jsSetsendOnPersonEnterInput", ["input", "change"], function (e) {
+          eel.jsSetsendOnPersonEnter(a.qs("#jsSetsendOnPersonEnterInput").value)
+        })
+        a.listen("#saveFrame", "click", function (e) {
+          eel.jsSaveFrame()
+        })
+      })()
+      eel.expose(receive_frame)
+      function receive_frame(encoded_frame) {
+        a.qs("#cameraFeed").src =
+          "data:image/jpeg;base64," + encoded_frame
+      }
+    </script>
+  </head>
+  <style>
+    .v{
+      display: flex;
+      flex-direction: column;
+    }
+    .h{
+      display: flex;
+      flex-direction: row;
+    }
+  </style>
+  <body>
+    <div class="v">
+      <div class="h">
+        <input
+        type="number"
+        name="captureIdx"
+        id="captureIdx"
+        value="1"
+        />
+        <input
+        type="number"
+        name="jsSetminconfidenceInput"
+        id="jsSetminconfidenceInput"
+        step="0.01"
+        value=".5"
+        />
+        <input
+        type="checkbox"
+        name="jsSetblurPeopleInput"
+        id="jsSetblurPeopleInput"
+        checked="false"
+        />
+        <input
+        type="checkbox"
+        name="jsSetsendOnPersonEnterInput"
+        id="jsSetsendOnPersonEnterInput"
+        value="false"
+        />
+        <button id="captureBtn">▶️ start capture</button>
+        <button id="stopCaptureBtn">🟥 stop capture</button>
+        <button id="quitAppBtn">🚪</button>
+        <button id="saveFrame">save frame</button>
+      </div>
+      <img id="cameraFeed"></img>
+    </div>
+    </body>
+</html>
