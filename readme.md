@@ -14,3 +14,6 @@ python tf_text_graph_ssd.py --input frozen_inference_graph.pb --config pipeline.
 python ./main.py
 
 ```
+
+press q to exit
+press w to save frame to file
