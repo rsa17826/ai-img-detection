@@ -30,8 +30,8 @@
           green: "rgb(127, 255, 138)",
         }[color] ?? color,
       innerHTML: msg,
-    }).val
-    setTimeout(() => x?.remove?.(), 2800)
+    })
+    setTimeout(() => x.remove(), 2500)
     return x
   }
   loadlib("libloader").savelib("toast", toast)
