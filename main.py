@@ -5,11 +5,15 @@ import eel, os
 from threading import Thread
 import base64
 
+BLANK_IMAGE = (
+  "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+)
 eel.init("web")
 
 cap: Any = 0
 
 saveFrame = False
+capidx = 0
 
 
 def log(*msgs):
@@ -20,7 +24,9 @@ def log(*msgs):
 @eel.expose
 def stopCapture():
   global cap
-  cap = None
+  if cap:
+    log("stopping capture")
+    cap = None
 
 
 @eel.expose
@@ -41,26 +47,42 @@ def jsSaveFrame():
 def jsSetminconfidence(val):
   global minconfidence
   minconfidence = float(val)
+  log("minconfidence set to " + str(val))
 
 
 @eel.expose
 def jsSetblurPeople(val):
   global blurPeople
   blurPeople = bool(val)
+  log("blurPeople set to " + str(val))
 
 
 @eel.expose
 def jsSetsendOnPersonEnter(val):
   global sendOnPersonEnter
   sendOnPersonEnter = bool(val)
+  log("sendOnPersonEnter set to " + str(val))
+
+
+@eel.expose
+def requestUpdatedData():
+  eel.loadData(
+    {
+      "setblurPeopleInput": blurPeople,
+      "setsendOnPersonEnterInput": sendOnPersonEnter,
+      "captureIdx": capidx,
+      "setminconfidenceInput": minconfidence,
+    }
+  )
 
 
 @eel.expose
 def startCapture(idx):
-  global cap
+  global cap, capidx
   idx = int(idx)
+  stopCapture()
   log(f"Attempting to start capture on camera index: {idx}")
-
+  capidx = idx
   cap = cv2.VideoCapture(idx)
 
   if not cap.isOpened():
@@ -76,12 +98,17 @@ def send_frame(frame):
   _, buffer = cv2.imencode(".jpg", frame) # Encode frame as JPEG
   frame_bytes = buffer.tobytes() # Get bytes from the buffer
   encoded_frame = base64.b64encode(frame_bytes).decode("utf-8") # Base64 encode
-  eel.receive_frame(encoded_frame) # Send to JavaScript
+  eel.receive_frame("data:image/jpeg;base64," + encoded_frame) # Send to JavaScript
+
+
+def sendBlankFrame():
+  eel.receive_frame(BLANK_IMAGE)
+  time.sleep(0.1)
 
 
 Thread(
   target=lambda: eel.start(
-    mode=None, port=15674, close_callback=lambda *x: os._exit(0)
+    mode=None, port=15674, close_callback=lambda *x: os._exit(0), shutdown_delay=10
   )
 ).start()
 os.system("start http://127.0.0.1:15674")
@@ -94,6 +121,7 @@ sendOnPersonEnter = False
 
 
 def sendPersonEntered(frame):
+  log("person just entered the frame")
   return
   # requests.post(
   #   "https://ntfy.sh/test",
@@ -244,11 +272,14 @@ class_names = {
 }
 
 
-personExistdLastFrame = False
+personExistdLastFrame = 0
 while True:
   if not cap or not cap.isOpened():
+    # print(11)
+    sendBlankFrame()
+    # print(112)
     continue
-  personExistdThisFrame = False
+  personExistdThisFrame = 0
   # Capture a frame from the camera
   ret, frame = cap.read()
   if not ret:
@@ -280,7 +311,7 @@ while True:
     w = int(detections[0, 0, i, 5] * frame.shape[1])
     h = int(detections[0, 0, i, 6] * frame.shape[0])
     if class_id == 1 and sendOnPersonEnter:
-      personExistdThisFrame = True
+      personExistdThisFrame += 1
     # Blur detected people if the flag is set
     if class_id == 1 and blurPeople:
       frame[y : y + h, x : x + w] = cv2.GaussianBlur(
@@ -347,9 +378,10 @@ while True:
   )
 
   send_frame(frame)
-  if personExistdThisFrame and not personExistdLastFrame:
+  if personExistdThisFrame > personExistdLastFrame:
     sendPersonEntered(frame)
   personExistdLastFrame = personExistdThisFrame
   if saveFrame:
     cv2.imwrite("./img/frame.png", frame) # Save the current frame as an image
+    log("frame saved")
     saveFrame = False

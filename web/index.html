@@ -13,11 +13,26 @@
         "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
       ;(async () => {
         await a.bodyload()
+        await a.waituntil(() => eel._websocket)
+        eel._websocket.onclose = window.close.bind(window)
+        eel.requestUpdatedData()
+        eel.expose(loadData)
+        function loadData({
+          setblurPeopleInput,
+          setsendOnPersonEnterInput,
+          captureIdx,
+          setminconfidenceInput,
+        }) {
+          a.qs("#setsendOnPersonEnterInput").checked = a.qs(
+            "#setblurPeopleInput"
+          ).checked = setblurPeopleInput
+          a.qs("#captureIdx").value = captureIdx
+          a.qs("#setminconfidenceInput").value = setminconfidenceInput
+        }
         window.toast = loadlib("toast")
         a.listen("#captureIdx", "change", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
         })
-        eel.startCapture(a.qs("#captureIdx").value)
         a.listen("#captureBtn", "click", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
         })
@@ -37,16 +52,12 @@
             )
           }
         )
-        a.listen(
-          "#setblurPeopleInput",
-          ["input", "change"],
-          function (e) {
-            eel.jsSetblurPeople(a.qs("#setblurPeopleInput").checked)
-          }
-        )
+        a.listen("#setblurPeopleInput", ["change"], function (e) {
+          eel.jsSetblurPeople(a.qs("#setblurPeopleInput").checked)
+        })
         a.listen(
           "#setsendOnPersonEnterInput",
-          ["input", "change"],
+          ["change"],
           function (e) {
             eel.jsSetsendOnPersonEnter(
               a.qs("#setsendOnPersonEnterInput").checked
@@ -65,8 +76,7 @@
       }
       eel.expose(receive_frame)
       function receive_frame(encoded_frame) {
-        a.qs("#cameraFeed").src =
-          "data:image/jpeg;base64," + encoded_frame
+        a.qs("#cameraFeed").src = encoded_frame
       }
     </script>
   </head>
