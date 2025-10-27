@@ -5,67 +5,89 @@ import eel, os
 from threading import Thread
 import base64
 
+# A blank image encoded in base64, used as a placeholder
 BLANK_IMAGE = (
   "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
 )
+
+# Initialize Eel, a Python library for creating simple Electron-like desktop apps
 eel.init("web")
 
+# Variable to hold the capture object; initially set to 0
 cap: Any = 0
 
+# Flag to determine whether to save the current frame
 saveFrame = False
+# Index of the camera to use
 capidx = 0
 
+# Set the minimum confidence level for object detection
+minconfidence = 0.5
+# Flag to indicate whether to blur detected people
+blurPeople = False
+# Flag to send data when a person enters the frame
+sendOnPersonEnter = False
 
+
+# Log messages to the console and the front end
 def log(*msgs):
   print(*msgs)
   eel.print(*msgs)
 
 
+# Expose a function to stop video capture from the camera
 @eel.expose
 def stopCapture():
   global cap
   if cap:
     log("stopping capture")
-    cap = None
+    cap = None # Release the camera resource
 
 
+# Expose a function to quit the application completely
 @eel.expose
 def quitApp():
   global cap
   if cap:
-    cap.release()
-  os._exit(0)
+    cap.release() # Release the camera resource if it's open
+  os._exit(0) # Exit the application
 
 
+# Expose a JavaScript function to save the current frame
 @eel.expose
 def jsSaveFrame():
   global saveFrame
-  saveFrame = True
+  saveFrame = True # Set the flag to save the frame
 
 
+# Expose JavaScript function to set minimum confidence level for detection
 @eel.expose
 def jsSetminconfidence(val):
   global minconfidence
-  minconfidence = float(val)
+  minconfidence = float(val) # Update minimum confidence with the new value
   log("minconfidence set to " + str(val))
 
 
+# Expose JavaScript function to set whether to blur detected people
 @eel.expose
 def jsSetblurPeople(val):
   global blurPeople
-  blurPeople = bool(val)
+  blurPeople = bool(val) # Update blurring preference
   log("blurPeople set to " + str(val))
 
 
+# Expose JavaScript function to set whether to send alerts on person entry
 @eel.expose
 def jsSetsendOnPersonEnter(val):
   global sendOnPersonEnter
-  sendOnPersonEnter = bool(val)
+  sendOnPersonEnter = bool(val) # Update the flag
   log("sendOnPersonEnter set to " + str(val))
 
 
+# Expose function to request updated settings/data to be sent to JavaScript
 @eel.expose
 def requestUpdatedData():
+  # Send current configuration to the front end
   eel.loadData(
     {
       "setblurPeopleInput": blurPeople,
@@ -76,48 +98,47 @@ def requestUpdatedData():
   )
 
 
+# Expose a function to start capturing video from the specified camera
 @eel.expose
 def startCapture(idx):
   global cap, capidx
-  idx = int(idx)
-  stopCapture()
+  idx = int(idx) # Convert the input index to an integer
+  stopCapture() # Stop any existing capture
   log(f"Attempting to start capture on camera index: {idx}")
-  capidx = idx
-  cap = cv2.VideoCapture(idx)
+  capidx = idx # Set the camera index to the global variable
+  cap = cv2.VideoCapture(idx) # Initialize the VideoCapture object
 
   if not cap.isOpened():
     log(
       f"Failed to open camera with index {idx}. Please check the index and try again."
-    )
+    ) # Log error if camera fails to open
   else:
-    log(f"camera with index {idx} was successfully opened")
+    log(f"camera with index {idx} was successfully opened") # Log success
 
 
+# Function to send the current video frame to the front end
 def send_frame(frame):
   # Convert the frame to a format suitable for web
   _, buffer = cv2.imencode(".jpg", frame) # Encode frame as JPEG
   frame_bytes = buffer.tobytes() # Get bytes from the buffer
   encoded_frame = base64.b64encode(frame_bytes).decode("utf-8") # Base64 encode
-  eel.receive_frame("data:image/jpeg;base64," + encoded_frame) # Send to JavaScript
+  # Send the encoded frame to the JavaScript frontend
+  eel.receive_frame("data:image/jpeg;base64," + encoded_frame)
 
 
+# Function to send a blank frame to avoid blank display
 def sendBlankFrame():
-  eel.receive_frame(BLANK_IMAGE)
-  time.sleep(0.1)
+  eel.receive_frame(BLANK_IMAGE) # Send the blank image
+  time.sleep(0.1) # Sleep briefly to reduce CPU load
 
 
+# Start the Eel application in a new thread
 Thread(
   target=lambda: eel.start(
     mode=None, port=15674, close_callback=lambda *x: os._exit(0), shutdown_delay=10
   )
 ).start()
 os.system("start http://127.0.0.1:15674")
-
-# Set minimum confidence level for object detection
-minconfidence = 0.5
-# Flag to blur detected people
-blurPeople = False
-sendOnPersonEnter = False
 
 
 def sendPersonEntered(frame):
@@ -275,9 +296,7 @@ class_names = {
 personExistdLastFrame = 0
 while True:
   if not cap or not cap.isOpened():
-    # print(11)
     sendBlankFrame()
-    # print(112)
     continue
   personExistdThisFrame = 0
   # Capture a frame from the camera
