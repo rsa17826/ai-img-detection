@@ -1,6 +1,6 @@
 ## user setup
 
-run
+run this in powershell
 
 ```pwsh
 git clone https://github.com/rsa17826/ai-img-detection.git ./ai-img-detection
@@ -9,6 +9,7 @@ wget http://download.tensorflow.org/models/object_detection/ssd_mobilenet_v2_coc
 tar -xvzf zip.tar.gz --strip-components=1
 rm ./zip.tar.gz
 py -3.13 -m venv ./.venv
+Set-ExecutionPolicy Bypass -Scope Process -Force
 ./.venv/Scripts/Activate.ps1
 python -m pip install -r ./requirements.txt
 python tf_text_graph_ssd.py --input frozen_inference_graph.pb --config pipeline.config --output graph.pbtxt
