@@ -12,6 +12,11 @@ cap: Any = 0
 saveFrame = False
 
 
+def log(*msgs):
+  print(*msgs)
+  eel.print(*msgs)
+
+
 @eel.expose
 def stopCapture():
   global cap
@@ -36,36 +41,34 @@ def jsSaveFrame():
 def jsSetminconfidence(val):
   global minconfidence
   minconfidence = float(val)
-  print(minconfidence)
 
 
 @eel.expose
 def jsSetblurPeople(val):
   global blurPeople
-  print(val)
   blurPeople = bool(val)
-  print(blurPeople)
 
 
 @eel.expose
 def jsSetsendOnPersonEnter(val):
   global sendOnPersonEnter
   sendOnPersonEnter = bool(val)
-  print(sendOnPersonEnter)
 
 
 @eel.expose
 def startCapture(idx):
   global cap
   idx = int(idx)
-  print(f"Attempting to start capture on camera index: {idx}")
+  log(f"Attempting to start capture on camera index: {idx}")
 
   cap = cv2.VideoCapture(idx)
 
   if not cap.isOpened():
-    print(
+    log(
       f"Failed to open camera with index {idx}. Please check the index and try again."
     )
+  else:
+    log(f"camera with index {idx} was successfully opened")
 
 
 def send_frame(frame):
@@ -76,7 +79,11 @@ def send_frame(frame):
   eel.receive_frame(encoded_frame) # Send to JavaScript
 
 
-Thread(target=lambda: eel.start(mode=None, port=15674)).start()
+Thread(
+  target=lambda: eel.start(
+    mode=None, port=15674, close_callback=lambda *x: os._exit(0)
+  )
+).start()
 os.system("start http://127.0.0.1:15674")
 
 # Set minimum confidence level for object detection
@@ -245,7 +252,7 @@ while True:
   # Capture a frame from the camera
   ret, frame = cap.read()
   if not ret:
-    print(frame, ret)
+    log(frame, ret)
     continue
   frame = cv2.flip(frame, 1) # Flip the frame for a mirror effect
   gray = cv2.cvtColor(frame, cv2.COLOR_RGB2GRAY) # Convert to grayscale

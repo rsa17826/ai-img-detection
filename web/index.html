@@ -1,21 +1,26 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>Hello, World!</title>
-
-    <!-- Include eel.js - note this file doesn't exist in the 'web' directory -->
+    <title>camera web ui</title>
     <script type="text/javascript" src="/eel.js"></script>
     <script type="text/javascript" src="./libloader.js"></script>
     <script type="text/javascript" src="./allfuncs.js"></script>
+    <script type="text/javascript" src="./toast.js"></script>
     <script type="text/javascript" src="./log.js"></script>
     <script type="text/javascript">
       const a = loadlib("allfuncs")
+      const BLANK_IMAGE =
+        "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
       ;(async () => {
         await a.bodyload()
+        window.toast = loadlib("toast")
         a.listen("#captureIdx", "change", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
         })
         eel.startCapture(a.qs("#captureIdx").value)
+        a.listen("#captureBtn", "click", function (e) {
+          eel.startCapture(a.qs("#captureIdx").value)
+        })
         a.listen("#stopCaptureBtn", "click", function (e) {
           eel.stopCapture()
         })
@@ -52,6 +57,12 @@
           eel.jsSaveFrame()
         })
       })()
+      eel.expose(print)
+      function print(...msgs) {
+        console.log(...msgs)
+        console.log(msgs.join(" - "))
+        toast(msgs.join(" - "), "green")
+      }
       eel.expose(receive_frame)
       function receive_frame(encoded_frame) {
         a.qs("#cameraFeed").src =
@@ -60,6 +71,15 @@
     </script>
   </head>
   <style>
+    * {
+      color: white;
+    }
+    button,
+    input {
+      background-color: #777;
+      border: none;
+      margin: 4px;
+    }
     .v {
       display: flex;
       flex-direction: column;
@@ -68,8 +88,21 @@
       display: flex;
       flex-direction: row;
     }
-    .c{
+    .c {
       align-items: center;
+      align-content: center;
+      align-self: center;
+    }
+    #cameraFeed {
+      --size: calc(100vh - 140px);
+      height: var(--size);
+      width: var(--size);
+      margin: 4px;
+      border: 10px solid black;
+    }
+    body,
+    html {
+      overflow: hidden;
     }
   </style>
   <body>
@@ -104,7 +137,6 @@
             id="setblurPeopleInput"
             checked="false"
           />
-
           <label for="setsendOnPersonEnterInput"
             >Send on Person Enter:</label
           >
@@ -116,11 +148,17 @@
           />
         </div>
         <div class="h">
-          <button id="quitAppBtn">🚪 Quit App</button>
+          <button id="quitAppBtn">Quit App</button>
           <button id="saveFrame">Save Frame</button>
         </div>
       </div>
-      <img id="cameraFeed" alt="Camera Feed" />
+      <div class="c">
+        <img
+          id="cameraFeed"
+          alt="Camera Feed"
+          src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="
+        />
+      </div>
     </div>
   </body>
 </html>
