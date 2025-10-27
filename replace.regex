@@ -3,3 +3,8 @@
 @regex (?<=\S)  #
 @replace  #
 @endregex
+@name no trailing whitespace
+@file \.\w+(?<!regex)$
+@regex  +$
+@replace 
+@endregex
