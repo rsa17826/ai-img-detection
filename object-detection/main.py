@@ -1,10 +1,10 @@
+import misc, time, requests
+import os
+import eel
 import cv2
 from typing import Any
-import misc, time, requests
-import eel, os
 from threading import Thread
 import base64
-
 # A blank image encoded in base64, used as a placeholder
 BLANK_IMAGE = (
   "data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw=="

@@ -22,7 +22,7 @@ def collides(x, y, w, h, face):
   return not (x >= x2 + w2 or x + w <= x2 or y >= y2 + h2 or y + h <= y2)
 
 
-cap = cv2.VideoCapture(1)
+cap = cv2.VideoCapture(0)
 autoReset = False
 lastFace: Any = 0
 death: Any = 0
@@ -84,7 +84,7 @@ def toPlaces(num: Any, pre, post=0, func=round):
   if post > 0:
     temp = func(float(num[1][-1] + "." + temp))
     num[1] = list(num[1])
-    num[1][-1] = str(temp)  # Replace last character
+    num[1][-1] = str(temp) # Replace last character
     num[1] = "".join(num[1])
     num = ".".join(num)
   else:
@@ -173,7 +173,7 @@ while True:
         f.write("./highScore.txt", str(score))
       cv2.putText(
         frame,
-        "FPS: " + toplaces(fps, 2, 3),
+        "FPS: " + toPlaces(fps, 2, 3),
         (20, 50),
         cv2.FONT_HERSHEY_SIMPLEX,
         1,
