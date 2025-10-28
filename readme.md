@@ -21,7 +21,7 @@ py -3.9 -m venv ./.venv
 Set-ExecutionPolicy Bypass -Scope Process -Force
 ./.venv/Scripts/Activate.ps1
 pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu121
-pip install face_recognition facenet-pytorch opencv-python flask pandas numpy
+pip install face_recognition facenet-pytorch opencv-python flask pandas numpy eel
 
 cd ..
 
