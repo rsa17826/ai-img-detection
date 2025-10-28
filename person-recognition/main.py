@@ -16,7 +16,7 @@ os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # Index of the camera to use
 capidx = 0
 os.makedirs("data", exist_ok=True)
-os.makedirs("enrolled/personname", exist_ok=True)
+os.makedirs("enrolled", exist_ok=True)
 # threshold tuning:
 # cosine similarity ranges roughly -1 to 1
 # same-person pairs are usually high (e.g. 0.6-0.9+),
