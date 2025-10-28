@@ -38,21 +38,4 @@ you can add more than 1 face under each name to make the detection more reliable
 
 once a face is added it will be able to start detecting any faces that are in the face list and unknown for those that arnt in the face list
 
-Traceback (most recent call last):
-  File "C:\Users\Student\Downloads\ai-img-detection\person-recognition\main.py", line 240, in <module>
-    emb = get_embedding(face_crop_rgb)
-  File "C:\Users\Student\Downloads\ai-img-detection\person-recognition\main.py", line 160, in get_embedding
-    face_tensor = mtcnn(face_img_rgb)
-  File "C:\Users\Student\Downloads\ai-img-detection\person-recognition\.venv\lib\site-packages\torch\nn\modules\module.py", line 1511, in _wrapped_call_impl
-    return self._call_impl(*args, **kwargs)
-  File "C:\Users\Student\Downloads\ai-img-detection\person-recognition\.venv\lib\site-packages\torch\nn\modules\module.py", line 1520, in _call_impl
-    return forward_call(*args, **kwargs)
-  File "C:\Users\Student\Downloads\ai-img-detection\person-recognition\.venv\lib\site-packages\facenet_pytorch\models\mtcnn.py", line 258, in forward
-    batch_boxes, batch_probs, batch_points = self.detect(img, landmarks=True)
-  File "C:\Users\Student\Downloads\ai-img-detection\person-recognition\.venv\lib\site-packages\facenet_pytorch\models\mtcnn.py", line 313, in detect
-    batch_boxes, batch_points = detect_face(
-  File "C:\Users\Student\Downloads\ai-img-detection\person-recognition\.venv\lib\site-packages\facenet_pytorch\models\utils\detect_face.py", line 83, in detect_face
-    boxes = torch.cat(boxes, dim=0)
-RuntimeError: torch.cat(): expected a non-empty list of Tensors
-
 <!-- brave://flags/#drop-input-events-while-paint-holding -->
