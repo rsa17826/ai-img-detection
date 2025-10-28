@@ -26,5 +26,8 @@ pip install face_recognition facenet-pytorch opencv-python flask pandas numpy ee
 cd ..
 
 ```
+either run object-detection.ps1 or person-recognition.ps1
+
 you should see http://127.0.0.1:15674 open in your default browser with ui used to control the python script
+
 ![image showing the web ui](image.png)
