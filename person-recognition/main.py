@@ -22,6 +22,8 @@ os.makedirs("enrolled", exist_ok=True)
 # same-person pairs are usually high (e.g. 0.6-0.9+),
 # different people are lower. You will tune this.
 MATCH_THRESHOLD = 0.6
+TARGET_CONFIDENCE = 0.7
+enableAutoCapture = False
 cap: Any = None
 faceName: Any = None
 # debounce (seconds) to avoid re-logging same person constantly
@@ -75,6 +77,7 @@ def requestUpdatedData():
     {
       "captureIdx": capidx,
       "setminconfidenceInput": MATCH_THRESHOLD,
+      "targetThreshInput": TARGET_CONFIDENCE,
     }
   )
 
@@ -85,6 +88,22 @@ def jsSetminconfidence(val):
   global MATCH_THRESHOLD
   MATCH_THRESHOLD = float(val) # Update minimum confidence with the new value
   log("MATCH_THRESHOLD set to " + str(val))
+
+
+# Expose JavaScript function to set minimum confidence level for detection
+@eel.expose
+def setTARGET_THRESH(val):
+  global TARGET_CONFIDENCE
+  TARGET_CONFIDENCE = float(val) # Update minimum confidence with the new value
+  log("TARGET_CONFIDENCE set to " + str(val))
+
+
+# Expose JavaScript function to set minimum confidence level for detection
+@eel.expose
+def setenableAutoCapture(val):
+  global enableAutoCapture
+  enableAutoCapture = float(val) # Update minimum confidence with the new value
+  log("enableAutoCapture set to " + str(val))
 
 
 @eel.expose
@@ -246,7 +265,6 @@ while True:
         try:
           emb = get_embedding(face_crop_rgb)
         except Exception as e:
-          log(e)
           continue
         if emb is None:
           continue
@@ -276,6 +294,14 @@ while True:
 
         # draw bbox + label
         cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
+        if (
+          enableAutoCapture
+          and name
+          and score
+          and score < TARGET_CONFIDENCE
+          and score > MATCH_THRESHOLD
+        ):
+          faceName = name
         cv2.putText(
           frame_bgr,
           label_text,
@@ -285,6 +311,7 @@ while True:
           color,
           2,
         )
+  send_frame(frame_bgr)
   if faceName:
     i = 0
     path = f"./enrolled/{faceName}/{i}.png"
@@ -292,7 +319,7 @@ while True:
     while os.path.exists(path):
       i += 1
       path = f"./enrolled/{faceName}/{i}.png"
+    log("adding image for ", faceName, "idx: ", i)
     cv2.imwrite(path, frame_rgb) # Save the current frame as an image
     faceName = None
     updateFacesList()
-  send_frame(frame_bgr)

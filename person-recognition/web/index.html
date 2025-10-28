@@ -17,15 +17,28 @@
         eel._websocket.onclose = window.close.bind(window)
         eel.requestUpdatedData()
         eel.expose(loadData)
-        function loadData({ captureIdx, setminconfidenceInput }) {
+        function loadData({
+          captureIdx,
+          setminconfidenceInput,
+          TARGET_CONFIDENCE,
+          enableAutoCapture,
+        }) {
           a.qs("#captureIdx").value = captureIdx
           a.qs("#setminconfidenceInput").value = setminconfidenceInput
+          a.qs("#TARGET_CONFIDENCE").value = TARGET_CONFIDENCE
+          a.qs("#enableAutoCapture").value = enableAutoCapture
           eel.updateFacesList()
         }
         window.toast = loadlib("toast")
         a.listen("#captureIdx", "change", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
           eel.updateFacesList()
+        })
+        a.listen("#enableAutoCapture", "change", function (e) {
+          eel.setenableAutoCapture(a.qs("#enableAutoCapture").value)
+        })
+        a.listen("#TARGET_CONFIDENCE", "change", function (e) {
+          eel.setTARGET_THRESH(a.qs("#TARGET_CONFIDENCE").value)
         })
         a.listen("#updateFacesList", "click", function (e) {
           eel.updateFacesList()
@@ -114,6 +127,7 @@
         <div class="h">
           <label for="captureIdx">Camera Index:</label>
           <input
+            title="what camera to use"
             type="number"
             name="captureIdx"
             id="captureIdx"
@@ -125,6 +139,7 @@
         <div class="h">
           <label for="setminconfidenceInput">Min Confidence:</label>
           <input
+            title="min Confidence for any detections"
             type="number"
             name="setminconfidenceInput"
             id="setminconfidenceInput"
@@ -132,6 +147,24 @@
             value="0.6"
             min="-1"
             max="1"
+          />
+          <label for="TARGET_CONFIDENCE">Target Confidence:</label>
+          <input
+            title="if Auto Capture is enabled and a person is detected with less than this in confidence a new image will be saved to increate confidence"
+            type="number"
+            name="TARGET_CONFIDENCE"
+            id="TARGET_CONFIDENCE"
+            step="0.01"
+            value="0.6"
+            min="-1"
+            max="1"
+          />
+          <label for="enableAutoCapture">Enable Auto Capture:</label>
+          <input
+            title="if enabled Target Confidence is used"
+            type="checkbox"
+            name="enableAutoCapture"
+            id="enableAutoCapture"
           />
         </div>
         <div class="h">
