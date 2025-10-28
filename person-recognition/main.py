@@ -77,7 +77,8 @@ def requestUpdatedData():
     {
       "captureIdx": capidx,
       "setminconfidenceInput": MATCH_THRESHOLD,
-      "targetThreshInput": TARGET_CONFIDENCE,
+      "TARGET_CONFIDENCE": TARGET_CONFIDENCE,
+      "enableAutoCapture": enableAutoCapture,
     }
   )
 

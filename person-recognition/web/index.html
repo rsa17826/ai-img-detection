@@ -35,7 +35,7 @@
           eel.updateFacesList()
         })
         a.listen("#enableAutoCapture", "change", function (e) {
-          eel.setenableAutoCapture(a.qs("#enableAutoCapture").value)
+          eel.setenableAutoCapture(a.qs("#enableAutoCapture").checked)
         })
         a.listen("#TARGET_CONFIDENCE", "change", function (e) {
           eel.setTARGET_THRESH(a.qs("#TARGET_CONFIDENCE").value)
@@ -69,9 +69,10 @@
       })()
       eel.expose(print)
       function print(...msgs) {
-        console.log(...msgs)
-        console.log(msgs.join(" - "))
-        toast(msgs.join(" - "), "green")
+        if (msgs.join(" - ") && msgs.length && msgs?.[0]) {
+          console.log(...msgs)
+          toast(msgs.join(" - "), "green")
+        }
       }
       eel.expose(receive_frame)
       function receive_frame(encoded_frame) {
