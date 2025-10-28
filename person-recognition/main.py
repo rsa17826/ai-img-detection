@@ -8,7 +8,7 @@ import os
 from typing import Any
 import eel
 from threading import Thread
-import base64
+import base64, time
 import enroll_faces
 
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
@@ -108,18 +108,14 @@ def l2norm(x):
   return x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-10)
 
 
-enroll_faces.init(log)
-# load embeddings db
-db = np.load(DB_PATH)
-known_embeddings = db["embeddings"] # shape (N,512)
-known_labels = db["labels"] # shape (N,)
-
-
 @eel.expose
 def updateFacesList():
-  global mtcnn, known_norm, resnet, device
+  global mtcnn, known_norm, resnet, device, db, known_embeddings, known_labels
   try:
+    db = np.load(DB_PATH)
     enroll_faces.init(log)
+    known_embeddings = db["embeddings"] # shape (N,512)
+    known_labels = db["labels"] # shape (N,)
     # load models
     known_norm = l2norm(known_embeddings)
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
@@ -127,9 +123,18 @@ def updateFacesList():
     resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
   except Exception as e:
     log(e)
-
-
-updateFacesList()
+  try:
+    db = np.load(DB_PATH)
+    enroll_faces.init(log)
+    known_embeddings = db["embeddings"] # shape (N,512)
+    known_labels = db["labels"] # shape (N,)
+    # load models
+    known_norm = l2norm(known_embeddings)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
+    resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
+  except Exception as e:
+    log(e)
 
 
 # Start the Eel application in a new thread
@@ -237,11 +242,20 @@ while True:
         if face_crop_rgb.size == 0:
           continue
 
-        emb = get_embedding(face_crop_rgb)
+        emb = None
+        try:
+          emb = get_embedding(face_crop_rgb)
+        except Exception as e:
+          log(e)
+          continue
         if emb is None:
           continue
 
-        name, score = match_identity(emb)
+        try:
+          name, score = match_identity(emb)
+        except Exception as e:
+          log(e)
+          continue
         label_text = "Unknown"
         color = (0, 0, 255) # red in BGR
         if name is not None:

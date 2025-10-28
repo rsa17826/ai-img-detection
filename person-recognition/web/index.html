@@ -20,10 +20,12 @@
         function loadData({ captureIdx, setminconfidenceInput }) {
           a.qs("#captureIdx").value = captureIdx
           a.qs("#setminconfidenceInput").value = setminconfidenceInput
+          eel.updateFacesList()
         }
         window.toast = loadlib("toast")
         a.listen("#captureIdx", "change", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
+          eel.updateFacesList()
         })
         a.listen("#updateFacesList", "click", function (e) {
           eel.updateFacesList()
@@ -33,6 +35,7 @@
         })
         a.listen("#captureBtn", "click", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
+          eel.updateFacesList()
         })
         a.listen("#stopCaptureBtn", "click", function (e) {
           eel.stopCapture()
