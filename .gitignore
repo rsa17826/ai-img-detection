@@ -13,5 +13,6 @@
 **/model.ckpt.meta
 **/pipeline.config
 **/data
-**/enroled
-**/enroled/*
+**/enrolled
+**/enrolled/*
+**/enrolled/**

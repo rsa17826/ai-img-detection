@@ -6,7 +6,7 @@ import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1
 from typing import Any
 
-def init():
+def init(log):
   ENROLL_DIR = "enrolled"
   DB_PATH = "data/embeddings_db.npz"
 
@@ -23,21 +23,21 @@ def init():
     if not os.path.isdir(person_folder):
       continue
 
-    print(f"[INFO] Processing {person_name}")
+    log(f"[INFO] Processing {person_name}")
     for img_file in os.listdir(person_folder):
       img_path = os.path.join(person_folder, img_file)
 
       # read image with cv2 (BGR -> RGB)
       img_bgr = cv2.imread(img_path)
       if img_bgr is None:
-        print(f"[WARN] Could not read {img_path}")
+        log(f"[WARN] Could not read {img_path}")
         continue
       img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
       # 2. Detect & crop face (returns PIL Image or None)
       face = mtcnn(img_rgb)
       if face is None:
-        print(f"[WARN] No face found in {img_path}")
+        log(f"[WARN] No face found in {img_path}")
         continue
 
       # face is a torch tensor [3,160,160]
@@ -55,9 +55,9 @@ def init():
   all_embeddings = np.array(all_embeddings)
   all_labels = np.array(all_labels)
 
-  print(f"[INFO] Total faces enrolled: {len(all_labels)}")
+  log(f"[INFO] Total faces enrolled: {len(all_labels)}")
 
   os.makedirs("data", exist_ok=True)
   np.savez(DB_PATH, embeddings=all_embeddings, labels=all_labels)
 
-  print(f"[INFO] Saved database to {DB_PATH}")
+  log(f"[INFO] Saved database to {DB_PATH}")
