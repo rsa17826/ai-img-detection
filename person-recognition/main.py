@@ -103,15 +103,33 @@ def quitApp():
   os._exit(0) # Exit the application
 
 
+# normalize known vectors for cosine sim
+def l2norm(x):
+  return x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-10)
+
+
+enroll_faces.init(log)
 # load embeddings db
 db = np.load(DB_PATH)
 known_embeddings = db["embeddings"] # shape (N,512)
 known_labels = db["labels"] # shape (N,)
 
 
-# normalize known vectors for cosine sim
-def l2norm(x):
-  return x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-10)
+@eel.expose
+def updateFacesList():
+  global mtcnn, known_norm, resnet, device
+  try:
+    enroll_faces.init(log)
+    # load models
+    known_norm = l2norm(known_embeddings)
+    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+    mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
+    resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
+  except Exception as e:
+    log(e)
+
+
+updateFacesList()
 
 
 # Start the Eel application in a new thread
@@ -131,23 +149,6 @@ if not os.path.exists(ATTEND_LOG):
   df = pd.DataFrame(columns=["timestamp", "name"])
   df.to_csv(ATTEND_LOG, index=False)
 mtcnn: Any = None
-
-
-@eel.expose
-def updateFacesList():
-  global mtcnn, known_norm, resnet, device
-  try:
-    enroll_faces.init(log)
-    known_norm = l2norm(known_embeddings)
-    # load models
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
-    resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
-  except Exception as e:
-    log(e)
-
-
-updateFacesList()
 
 
 def get_embedding(face_img_rgb):
