@@ -31,3 +31,9 @@ either run object-detection.ps1 or person-recognition.ps1
 you should see http://127.0.0.1:15674 open in your default browser with ui used to control the python script
 
 ![image showing the web ui](image.png)
+
+to start using person-recognition first enable the correct camera, then press "add face to list" and enter the faces name
+
+you can add more than 1 face under each name to make the detection more reliable
+
+once a face is added it will be able to start detecting any faces that are in the face list and unknown for those that arnt in the face list
