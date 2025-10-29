@@ -132,8 +132,8 @@ def l2norm(x):
 def updateFacesList():
   global mtcnn, known_norm, resnet, device, db, known_embeddings, known_labels
   try:
-    db = np.load(DB_PATH)
     enroll_faces.init(log)
+    db = np.load(DB_PATH)
     known_embeddings = db["embeddings"] # shape (N,512)
     known_labels = db["labels"] # shape (N,)
     # load models
@@ -144,8 +144,8 @@ def updateFacesList():
   except Exception as e:
     log(e)
   try:
-    db = np.load(DB_PATH)
     enroll_faces.init(log)
+    db = np.load(DB_PATH)
     known_embeddings = db["embeddings"] # shape (N,512)
     known_labels = db["labels"] # shape (N,)
     # load models
