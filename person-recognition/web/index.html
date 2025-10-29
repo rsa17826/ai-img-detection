@@ -44,7 +44,9 @@
           eel.updateFacesList()
         })
         a.listen("#addFaceToList", "click", function (e) {
-          eel.addFaceToList(prompt("person name"))
+          eel.addFaceToList(
+            a.qs("#faceName").value || prompt("person name")
+          )
         })
         a.listen("#captureBtn", "click", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
@@ -171,6 +173,13 @@
         <div class="h">
           <button id="quitAppBtn">Quit App</button>
           <button id="updateFacesList">update faces list</button>
+          <label for="faceName">face name:</label>
+          <input
+            title="name of the face that is being captured when add face to list gets pressed"
+            type="text"
+            name="faceName"
+            id="faceName"
+          />
           <button id="addFaceToList">add face to list</button>
         </div>
       </div>

@@ -244,10 +244,11 @@ while True:
 
   frame_bgr = cv2.flip(frame_bgr, 1) # Flip the frame for a mirror effect
   frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-
+  rawframe_bgr = frame_bgr.copy()
   # detect all faces in the *full* frame
   # boxes: [[x1,y1,x2,y2], ...]
   # probs: confidence per face
+  facePos = None
   if mtcnn:
     boxes, probs = mtcnn.detect(frame_rgb)
 
@@ -292,7 +293,7 @@ while True:
             # append to CSV
             df_row = pd.DataFrame([{"timestamp": ts_str, "name": name}])
             df_row.to_csv(ATTEND_LOG, mode="a", header=False, index=False)
-
+        facePos = [x1, y1, x2, y2]
         # draw bbox + label
         cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
         if (
@@ -321,6 +322,14 @@ while True:
       i += 1
       path = f"./enrolled/{faceName}/{i}.png"
     log("adding image for ", faceName, "idx: ", i)
-    cv2.imwrite(path, frame_rgb) # Save the current frame as an image
+    if facePos:
+      frame_rgb_cropped = rawframe_bgr[
+        max(0, facePos[1] - 15) : min(facePos[3] + 15, rawframe_bgr.shape[0]),
+        max(0, facePos[0] - 15) : min(facePos[2] + 15, rawframe_bgr.shape[1]),
+      ]
+    else:
+      frame_rgb_cropped = rawframe_bgr
+
+    cv2.imwrite(path, frame_rgb_cropped) # Save the current frame as an image
     faceName = None
     updateFacesList()

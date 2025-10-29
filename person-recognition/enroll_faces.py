@@ -38,6 +38,7 @@ def init(log):
       face = mtcnn(img_rgb)
       if face is None:
         log(f"[WARN] No face found in {img_path}")
+        os.remove(img_path)
         continue
 
       # face is a torch tensor [3,160,160]
@@ -55,9 +56,9 @@ def init(log):
   all_embeddings = np.array(all_embeddings)
   all_labels = np.array(all_labels)
 
-  log(f"[INFO] Total faces enrolled: {len(all_labels)}")
+  # log(f"[INFO] Total faces enrolled: {len(all_labels)}")
 
   os.makedirs("data", exist_ok=True)
   np.savez(DB_PATH, embeddings=all_embeddings, labels=all_labels)
 
-  log(f"[INFO] Saved database to {DB_PATH}")
+  # log(f"[INFO] Saved database to {DB_PATH}")

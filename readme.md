@@ -36,5 +36,3 @@ to start using person-recognition first enable the correct camera, then press "a
 you can add more than 1 face under each name to make the detection more reliable
 
 once a face is added it will be able to start detecting any faces that are in the face list and unknown for those that arnt in the face list
-
-<!-- brave://flags/#drop-input-events-while-paint-holding -->
