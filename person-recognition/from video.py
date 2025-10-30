@@ -264,7 +264,8 @@ maxProg = len(sorted_files)
 prog = 0
 enableAutoCapture = True
 
-def saveFace(name):
+
+def saveFace(name, facePos: Any = None):
   i = 0
   path = f"./enrolled/{name}/{i}.png"
   os.makedirs(f"./enrolled/{name}", exist_ok=True)
@@ -274,19 +275,14 @@ def saveFace(name):
   print("adding image for ", name, "idx: ", i)
   if facePos:
     frame_rgb_cropped = rawframe_bgr[
-      max(0, facePos[1] - 15) : min(
-        facePos[3] + 15, rawframe_bgr.shape[0]
-      ),
-      max(0, facePos[0] - 15) : min(
-        facePos[2] + 15, rawframe_bgr.shape[1]
-      ),
+      max(0, facePos[1] - 15) : min(facePos[3] + 15, rawframe_bgr.shape[0]),
+      max(0, facePos[0] - 15) : min(facePos[2] + 15, rawframe_bgr.shape[1]),
     ]
   else:
     frame_rgb_cropped = rawframe_bgr
 
-  cv2.imwrite(
-    path, frame_rgb_cropped
-  ) # Save the current frame as an image
+  cv2.imwrite(path, frame_rgb_cropped) # Save the current frame as an image
+
 
 peopleList: set[Any] = set()
 for frameFileName in sorted_files:
@@ -338,6 +334,7 @@ for frameFileName in sorted_files:
             continue
           label_text = "Unknown"
           color = (0, 0, 255) # red in BGR
+          facePos = [x1, y1, x2, y2]
           if name is not None:
             label_text = f"{name} ({score:.2f})"
             color = (0, 255, 0) # green
@@ -349,7 +346,7 @@ for frameFileName in sorted_files:
             name = input("who is this? ")
             cv2.destroyAllWindows()
             thisFramePeopleList.add(name)
-            saveFace(name)
+            saveFace(name, facePos)
             updateFacesList()
             continue
           if (
@@ -359,7 +356,7 @@ for frameFileName in sorted_files:
             and score < TARGET_CONFIDENCE
             and score > MATCH_THRESHOLD
           ):
-            saveFace(name)
+            saveFace(name, facePos)
             updateFacesList()
           # draw bbox + label
           cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
@@ -372,7 +369,6 @@ for frameFileName in sorted_files:
             color,
             2,
           )
-          facePos = [x1, y1, x2, y2]
   cv2.imwrite(
     f"./outFrames/{frameFileName}", frame_bgr
   ) # Save the current frame as an image

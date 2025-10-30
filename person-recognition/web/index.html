@@ -6,6 +6,7 @@
     <script type="text/javascript" src="./libloader.js"></script>
     <script type="text/javascript" src="./allfuncs.js"></script>
     <script type="text/javascript" src="./toast.js"></script>
+    <script type="text/javascript" src="./progressBar.js"></script>
     <script type="text/javascript" src="./log.js"></script>
     <script type="text/javascript">
       const a = loadlib("allfuncs")
@@ -17,6 +18,18 @@
         eel._websocket.onclose = window.close.bind(window)
         eel.requestUpdatedData()
         eel.expose(loadData)
+        eel.expose(hideProg)
+        eel.expose(setProg)
+        function setProg(prog, maxProg, name) {
+          if (!window.progBar) {
+            window.progBar = new (loadlib("progress bar"))(prog, maxProg)
+          }
+          window.progBar.set(prog, name)
+        }
+        function hideProg() {
+          window.progBar.remove()
+          window.progBar = null
+        }
         function loadData({
           captureIdx,
           setminconfidenceInput,

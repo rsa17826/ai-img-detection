@@ -6,7 +6,8 @@ import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1
 from typing import Any
 
-def init(log):
+
+def init(log, setProg):
   ENROLL_DIR = "enrolled"
   DB_PATH = "data/embeddings_db.npz"
 
@@ -17,9 +18,12 @@ def init(log):
 
   all_embeddings: Any = []
   all_labels: Any = []
-
+  prog = 0
+  maxProg = len(os.listdir(ENROLL_DIR))
   for person_name in os.listdir(ENROLL_DIR):
     person_folder = os.path.join(ENROLL_DIR, person_name)
+    prog += 1
+    setProg(prog, maxProg, person_name)
     if not os.path.isdir(person_folder):
       continue
 

@@ -132,7 +132,7 @@ def l2norm(x):
 def updateFacesList():
   global mtcnn, known_norm, resnet, device, db, known_embeddings, known_labels
   try:
-    enroll_faces.init(log)
+    enroll_faces.init(log, eel.setProg)
     db = np.load(DB_PATH)
     known_embeddings = db["embeddings"] # shape (N,512)
     known_labels = db["labels"] # shape (N,)
@@ -143,19 +143,7 @@ def updateFacesList():
     resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
   except Exception as e:
     log(e)
-  try:
-    enroll_faces.init(log)
-    db = np.load(DB_PATH)
-    known_embeddings = db["embeddings"] # shape (N,512)
-    known_labels = db["labels"] # shape (N,)
-    # load models
-    known_norm = l2norm(known_embeddings)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
-    resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
-  except Exception as e:
-    log(e)
-
+  eel.hideProg()
 
 # Start the Eel application in a new thread
 Thread(
