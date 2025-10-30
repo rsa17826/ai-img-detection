@@ -254,10 +254,10 @@ command = ["ffmpeg", "-i", video_file, output_pattern]
 
 # Run the command
 try:
-    subprocess.run(command, check=True)
-    print("Frames generated successfully.")
+  subprocess.run(command, check=True)
+  print("Frames generated successfully.")
 except subprocess.CalledProcessError as e:
-    print(f"An error occurred: {e}")
+  print(f"An error occurred: {e}")
 
 sorted_files = sorted(os.listdir("./frames"), key=lambda x: int(x.split(".")[0]))
 maxProg = len(sorted_files)
@@ -376,44 +376,60 @@ for frameFileName in sorted_files:
   if thisFramePeopleList != peopleList:
     for person in thisFramePeopleList:
       if person not in peopleList:
-        data.append(f'person "{person}" entered on frame {frameFileName}')
+        data.append(f'person "{person}" entered at {frameFileName}')
     for person in peopleList:
       if person not in thisFramePeopleList:
-        data.append(f'person "{person}" exited on frame {frameFileName}')
+        data.append(f'person "{person}" exited at {frameFileName}')
     peopleList = thisFramePeopleList
     f.writeline("./log.txt", "\n" + "\n".join(data))
 import re
 
 output_video_file = re.sub(r"(\.[^.]+$)", " - updated\\1", video_file)
 
-try:
-  result = subprocess.run(
-    ["ffmpeg", "-i", video_file],
-    stderr=subprocess.PIPE,
-    stdout=subprocess.PIPE,
-    text=True,
-    check=False,
-  )
-  # Use regex to find the frame rate
-  fps_match = re.search(r"(\d+(\.\d+)?)\s*fps", result.stderr)
+result = subprocess.run(
+  ["ffmpeg", "-i", video_file],
+  stderr=subprocess.PIPE,
+  stdout=subprocess.PIPE,
+  text=True,
+  check=False,
+)
+# Use regex to find the frame rate
+fps_match = re.search(r"(\d+(\.\d+)?)\s*fps", result.stderr)
 
-  if fps_match:
-    fps = fps_match.group(1) # Extract frame rate value
-    print(f"Extracted frame rate: {fps} fps")
-  else:
-    print("Frame rate could not be determined.")
-    sys.exit(1)
-
-except subprocess.CalledProcessError as e:
-  print(f"Error retrieving frame rate: {e}")
+if fps_match:
+  fps = float(fps_match.group(1)) # Extract frame rate value
+  print(f"Extracted frame rate: {fps} fps")
+else:
+  print("Frame rate could not be determined.")
   sys.exit(1)
+
 print(fps, "fps")
+
+
+def toTime(frame_number):
+  """Convert frame number to time in HH:MM:SS format."""
+  total_seconds = frame_number / fps
+  hours = int(total_seconds // 3600)
+  minutes = int((total_seconds % 3600) // 60)
+  seconds = int(total_seconds % 60)
+  return f"{hours:02}:{minutes:02}:{seconds:02}"
+
+
+# Replace frame numbers with converted time
+f.write(
+  "./log.txt",
+  re.sub(
+    r"(\d+)\.png",
+    lambda x: toTime(int(x.group(1))),
+    f.read("./log.txt"),
+  ),
+)
 
 # Step 4: Construct the command to create a video from frames and retain audio
 combine_command = [
   "ffmpeg",
   "-framerate",
-  fps, # Use extracted frame rate
+  str(fps), # Use extracted frame rate
   "-i",
   "outFrames/%04d.png", # Input frame pattern
   "-i",
@@ -427,8 +443,8 @@ combine_command = [
   "-pix_fmt",
   "yuv420p", # Set pixel format
   "-shortest", # Ensure the video ends when the shortest stream ends
-  output_video_file, # Output video file name
-  "-y"
+  str(output_video_file), # Output video file name
+  "-y",
 ]
 
 
