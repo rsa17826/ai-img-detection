@@ -7,7 +7,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 from typing import Any
 
 
-def init(log, setProg):
+def init(log, setProg=lambda *a: 1):
   ENROLL_DIR = "enrolled"
   DB_PATH = "data/embeddings_db.npz"
 

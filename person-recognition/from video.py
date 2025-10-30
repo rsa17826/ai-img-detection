@@ -236,28 +236,28 @@ def match_identity(embedding_vec):
     return None, None
 
 
-# sys.argv.append(r"C:\Users\Student\Hi Me In 10 Years [F0OkwXKcPSE].mp4")
+sys.argv.append(r"C:\Users\Student\Hi Me In 10 Years [F0OkwXKcPSE].mp4")
 # print(sys.argv)
-# import subprocess
-# import sys
+import subprocess
+import sys
 
-# # Ensure the script receives a video file path as the first argument
-# if len(sys.argv) < 2:
-#     print("Usage: python script.py <video_file>")
-#     sys.exit(1)
+# Ensure the script receives a video file path as the first argument
+if len(sys.argv) < 2:
+  print("Usage: python script.py <video_file>")
+  sys.exit(1)
 
-# video_file = sys.argv[1]
-# output_pattern = "frames/%04d.png" # Define how to name your frames
+video_file = sys.argv[1]
+output_pattern = "frames/%04d.png" # Define how to name your frames
 
-# # Construct the command
-# command = ["ffmpeg", "-i", video_file, output_pattern]
+# Construct the command
+command = ["ffmpeg", "-i", video_file, output_pattern]
 
-# # Run the command
-# try:
-#     subprocess.run(command, check=True)
-#     print("Frames generated successfully.")
-# except subprocess.CalledProcessError as e:
-#     print(f"An error occurred: {e}")
+# Run the command
+try:
+    subprocess.run(command, check=True)
+    print("Frames generated successfully.")
+except subprocess.CalledProcessError as e:
+    print(f"An error occurred: {e}")
 
 sorted_files = sorted(os.listdir("./frames"), key=lambda x: int(x.split(".")[0]))
 maxProg = len(sorted_files)
@@ -382,3 +382,59 @@ for frameFileName in sorted_files:
         data.append(f'person "{person}" exited on frame {frameFileName}')
     peopleList = thisFramePeopleList
     f.writeline("./log.txt", "\n" + "\n".join(data))
+import re
+
+output_video_file = re.sub(r"(\.[^.]+$)", " - updated\\1", video_file)
+
+try:
+  result = subprocess.run(
+    ["ffmpeg", "-i", video_file],
+    stderr=subprocess.PIPE,
+    stdout=subprocess.PIPE,
+    text=True,
+    check=False,
+  )
+  # Use regex to find the frame rate
+  fps_match = re.search(r"(\d+(\.\d+)?)\s*fps", result.stderr)
+
+  if fps_match:
+    fps = fps_match.group(1) # Extract frame rate value
+    print(f"Extracted frame rate: {fps} fps")
+  else:
+    print("Frame rate could not be determined.")
+    sys.exit(1)
+
+except subprocess.CalledProcessError as e:
+  print(f"Error retrieving frame rate: {e}")
+  sys.exit(1)
+print(fps, "fps")
+
+# Step 4: Construct the command to create a video from frames and retain audio
+combine_command = [
+  "ffmpeg",
+  "-framerate",
+  fps, # Use extracted frame rate
+  "-i",
+  "outFrames/%04d.png", # Input frame pattern
+  "-i",
+  video_file, # Input original video file for audio
+  "-c:v",
+  "libx264", # Set video codec
+  "-c:a",
+  "aac", # Set audio codec
+  "-b:a",
+  "192k", # Set audio bitrate
+  "-pix_fmt",
+  "yuv420p", # Set pixel format
+  "-shortest", # Ensure the video ends when the shortest stream ends
+  output_video_file, # Output video file name
+  "-y"
+]
+
+
+# Run the command to combine frames into a video
+try:
+  subprocess.run(combine_command, check=True)
+  print(f"Video '{output_video_file}' created successfully.")
+except subprocess.CalledProcessError as e:
+  print(f"An error occurred while combining frames into a video: {e}")
