@@ -19,7 +19,9 @@
 **/frames/**
 **/frame/**
 **/outFrames/**
+**/outFramesStep2/**
 frames
 frame
 outFrames
+outFramesStep2
 **/log.txt

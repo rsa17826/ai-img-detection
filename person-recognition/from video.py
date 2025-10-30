@@ -12,6 +12,7 @@ import base64, time
 import enroll_faces
 import subprocess, sys
 from pathlib import Path
+import re, hashlib
 
 
 # F
@@ -147,6 +148,7 @@ os.makedirs("data", exist_ok=True)
 os.makedirs("enrolled", exist_ok=True)
 os.makedirs("frames", exist_ok=True)
 os.makedirs("outFrames", exist_ok=True)
+os.makedirs("outFramesStep2", exist_ok=True)
 # threshold tuning:
 # cosine similarity ranges roughly -1 to 1
 # same-person pairs are usually high (e.g. 0.6-0.9+),
@@ -190,7 +192,7 @@ def updateFacesList():
   #   print(e)
 
 
-updateFacesList()
+# updateFacesList()
 # init attendance memory
 last_seen: dict[Any, Any] = {} # name -> unix timestamp
 # prepare attendance print file if missing
@@ -249,15 +251,15 @@ if len(sys.argv) < 2:
 video_file = sys.argv[1]
 output_pattern = "frames/%04d.png" # Define how to name your frames
 
-# Construct the command
-command = ["ffmpeg", "-i", video_file, output_pattern]
+# # Construct the command
+# command = ["ffmpeg", "-i", video_file, output_pattern]
 
-# Run the command
-try:
-  subprocess.run(command, check=True)
-  print("Frames generated successfully.")
-except subprocess.CalledProcessError as e:
-  print(f"An error occurred: {e}")
+# # Run the command
+# try:
+#   subprocess.run(command, check=True)
+#   print("Frames generated successfully.")
+# except subprocess.CalledProcessError as e:
+#   print(f"An error occurred: {e}")
 
 sorted_files = sorted(os.listdir("./frames"), key=lambda x: int(x.split(".")[0]))
 maxProg = len(sorted_files)
@@ -265,124 +267,253 @@ prog = 0
 enableAutoCapture = True
 
 
-def saveFace(name, facePos: Any = None):
-  i = 0
-  path = f"./enrolled/{name}/{i}.png"
-  os.makedirs(f"./enrolled/{name}", exist_ok=True)
-  while os.path.exists(path):
-    i += 1
-    path = f"./enrolled/{name}/{i}.png"
-  print("adding image for ", name, "idx: ", i)
-  if facePos:
-    frame_rgb_cropped = rawframe_bgr[
-      max(0, facePos[1] - 15) : min(facePos[3] + 15, rawframe_bgr.shape[0]),
-      max(0, facePos[0] - 15) : min(facePos[2] + 15, rawframe_bgr.shape[1]),
-    ]
-  else:
-    frame_rgb_cropped = rawframe_bgr
+# def saveFace(name, facePos: Any = None):
+#   i = 0
+#   path = f"./enrolled/{name}/{i}.png"
+#   os.makedirs(f"./enrolled/{name}", exist_ok=True)
+#   while os.path.exists(path):
+#     i += 1
+#     path = f"./enrolled/{name}/{i}.png"
+#   print("adding image for ", name, "idx: ", i)
+#   if facePos:
+#     frame_rgb_cropped = rawframe_bgr[
+#       max(0, facePos[1] - 15) : min(facePos[3] + 15, rawframe_bgr.shape[0]),
+#       max(0, facePos[0] - 15) : min(facePos[2] + 15, rawframe_bgr.shape[1]),
+#     ]
+#   else:
+#     frame_rgb_cropped = rawframe_bgr
 
-  cv2.imwrite(path, frame_rgb_cropped) # Save the current frame as an image
+#   cv2.imwrite(path, frame_rgb_cropped) # Save the current frame as an image
 
 
-peopleList: set[Any] = set()
+# peopleList: set[Any] = set()
+# for frameFileName in sorted_files:
+#   prog += 1
+#   if os.path.exists(os.path.join("./outFrames", frameFileName)):
+#     continue
+#   thisFramePeopleList = set()
+#   print(str(int(prog / maxProg * 100)) + "%")
+#   frame = os.path.join("./frames", frameFileName)
+#   print(frame)
+
+#   frame_bgr = cv2.imread(frame)
+
+#   frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
+#   rawframe_bgr = frame_bgr.copy()
+#   # detect all faces in the *full* frame
+#   # boxes: [[x1,y1,x2,y2], ...]
+#   # probs: confidence per face
+#   facePos = None
+#   faceFails = True
+#   while faceFails:
+#     faceFails = False
+#     if mtcnn:
+#       boxes, probs = mtcnn.detect(frame_rgb)
+
+#       if boxes is not None:
+#         for box, prob in zip(boxes, probs):
+#           if prob is None:
+#             continue
+#           x1, y1, x2, y2 = [int(v) for v in box]
+
+#           # crop face region
+#           face_crop_rgb = frame_rgb[y1:y2, x1:x2]
+#           if face_crop_rgb.size == 0:
+#             continue
+
+#           emb = None
+#           try:
+#             emb = get_embedding(face_crop_rgb)
+#           except Exception as e:
+#             continue
+#           if emb is None:
+#             continue
+
+#           try:
+#             name, score = match_identity(emb)
+#           except Exception as e:
+#             print(e)
+#             continue
+#           label_text = "Unknown"
+#           color = (0, 0, 255) # red in BGR
+#           facePos = [x1, y1, x2, y2]
+#           if name is not None:
+#             label_text = f"{name} ({score:.2f})"
+#             color = (0, 255, 0) # green
+#             thisFramePeopleList.add(name)
+#           else:
+#             faceFails = True
+#             cv2.imshow("a", frame_bgr)
+#             cv2.waitKey(1)
+#             name = input("who is this? ")
+#             cv2.destroyAllWindows()
+#             thisFramePeopleList.add(name)
+#             saveFace(name, facePos)
+#             updateFacesList()
+#             continue
+#           if (
+#             enableAutoCapture
+#             and name
+#             and score
+#             and score < TARGET_CONFIDENCE
+#             and score > MATCH_THRESHOLD
+#           ):
+#             saveFace(name, facePos)
+#             updateFacesList()
+#           # draw bbox + label
+#           cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
+#           cv2.putText(
+#             frame_bgr,
+#             label_text,
+#             (x1, y1 - 10),
+#             cv2.FONT_HERSHEY_SIMPLEX,
+#             0.6,
+#             color,
+#             2,
+#           )
+#   cv2.imwrite(
+#     f"./outFrames/{frameFileName}", frame_bgr
+#   ) # Save the current frame as an image
+#   data = []
+#   if thisFramePeopleList != peopleList:
+#     for person in thisFramePeopleList:
+#       if person not in peopleList:
+#         data.append(f'person "{person}" entered at {frameFileName}')
+#     for person in peopleList:
+#       if person not in thisFramePeopleList:
+#         data.append(f'person "{person}" exited at {frameFileName}')
+#     peopleList = thisFramePeopleList
+#     f.writeline("./log.txt", "\n" + "\n".join(data))
+
+
+def text_to_color(text):
+  """Convert text to a color using its hash."""
+  # Create a hash of the text
+  hash_object = hashlib.md5(
+    text.encode()
+  ) # You can use sha256 or any other hash function
+  hash_hex = hash_object.hexdigest()
+
+  # Convert the first 6 characters of the hex to RGB
+  r = int(hash_hex[:2], 16) # red
+  g = int(hash_hex[2:4], 16) # green
+  b = int(hash_hex[4:6], 16) # blue
+  return (r, g, b)
+
+
+from typing import Dict, List
+
+
+actionList: Dict[int, List[List[Any]]] = {}
+names: set[str] = set()
+for line in f.read("./log.txt").split("\n"):
+  if line and '"' in line and ".png" in line:
+    # Extract the name
+    name_match = re.search(r'"([^"]+)"', line)
+    if name_match:
+      name = name_match.group(1)
+
+      # Check if "entered" is in the line
+      entered = "entered" in line
+
+      # Add name to the set
+      if name not in names:
+        names.add(name)
+
+      # Extract frame number
+      frame_match = re.search(r"(\d+)\.png", line)
+      if frame_match:
+        frame = int(frame_match.group(1))
+        foundSameBefore = False
+        # Initialize frame list if not present
+        if frame not in actionList:
+          actionList[frame] = []
+        if frame - 1 in actionList:
+          i = 0
+          for action in actionList[frame - 1]:
+            if action[0] == name:
+              del actionList[frame - 1][i]
+              foundSameBefore = True
+            i += 1
+          if not actionList[frame - 1]:
+            del actionList[(frame - 1)]
+        # Append the [name, entered] list to actionList
+        if not foundSameBefore:
+          actionList[frame].append([name, entered])
+
+
+def findNextAction(targetFrame, name):
+  for frame, actions in actionList.items():
+    if frame <= targetFrame:
+      continue
+    found = False
+    for action in actions:
+      if action[0] != name:
+        continue
+      else:
+        found = True
+        break
+    if found:
+      return frame
+  return int(sorted_files[-1].replace(".png", ""))
+
+
+def rerange(val, low1, high1, low2, high2):
+  return ((val - low1) / (high1 - low1)) * (high2 - low2) + low2
+
+
+activeActions: Any = {}
+nextActionFrame = 0
+for name in names:
+  activeActions[name] = False
 for frameFileName in sorted_files:
+  frameName = int(frameFileName.replace(".png", ""))
   prog += 1
-  if os.path.exists(os.path.join("./outFrames", frameFileName)):
-    continue
-  thisFramePeopleList = set()
-  print(str(int(prog / maxProg * 100)) + "%")
-  frame = os.path.join("./frames", frameFileName)
-  print(frame)
+  if frameName in actionList:
+    for action in actionList[frameName]:
+      nextActionFrame = findNextAction(frameName, action[0])
+      print(
+        action,
+        frameName,
+      )
+    print(
+      str(int(prog / maxProg * 100)) + "%",
+      str(int(frameName / nextActionFrame * 100)) + "%",
+    )
+  frame_bgr = cv2.imread(os.path.join("./outFrames", str(frameFileName)))
+  y = 0
+  for name, action in activeActions.items():
+    progress = int(frameName / nextActionFrame * 100)
+    y += 20
+    cv2.putText(
+      frame_bgr,
+      name,
+      (15, y),
+      cv2.FONT_HERSHEY_SIMPLEX,
+      0.6,
+      text_to_color(name),
+      2,
+    )
+    cv2.rectangle(frame_bgr, (15, y + 10), (115, y + 20), (0, 0, 0), -1)
+    cv2.rectangle(
+      frame_bgr,
+      (15, y + 10),
+      (int(15 + progress), y + 20),
+      text_to_color(name),
+      -1,
+    )
+    y += 20
+    cv2.putText(
+      frame_bgr,
+      str(progress) + "%" + " - " + ("entering" if action else "exiting"),
+      (130, y),
+      cv2.FONT_HERSHEY_SIMPLEX,
+      0.6,
+      text_to_color(name),
+      2,
+    )
+  cv2.imwrite(f"./outFramesStep2/{frameFileName}", frame_bgr)
 
-  frame_bgr = cv2.imread(frame)
-
-  frame_rgb = cv2.cvtColor(frame_bgr, cv2.COLOR_BGR2RGB)
-  rawframe_bgr = frame_bgr.copy()
-  # detect all faces in the *full* frame
-  # boxes: [[x1,y1,x2,y2], ...]
-  # probs: confidence per face
-  facePos = None
-  faceFails = True
-  while faceFails:
-    faceFails = False
-    if mtcnn:
-      boxes, probs = mtcnn.detect(frame_rgb)
-
-      if boxes is not None:
-        for box, prob in zip(boxes, probs):
-          if prob is None:
-            continue
-          x1, y1, x2, y2 = [int(v) for v in box]
-
-          # crop face region
-          face_crop_rgb = frame_rgb[y1:y2, x1:x2]
-          if face_crop_rgb.size == 0:
-            continue
-
-          emb = None
-          try:
-            emb = get_embedding(face_crop_rgb)
-          except Exception as e:
-            continue
-          if emb is None:
-            continue
-
-          try:
-            name, score = match_identity(emb)
-          except Exception as e:
-            print(e)
-            continue
-          label_text = "Unknown"
-          color = (0, 0, 255) # red in BGR
-          facePos = [x1, y1, x2, y2]
-          if name is not None:
-            label_text = f"{name} ({score:.2f})"
-            color = (0, 255, 0) # green
-            thisFramePeopleList.add(name)
-          else:
-            faceFails = True
-            cv2.imshow("a", frame_bgr)
-            cv2.waitKey(1)
-            name = input("who is this? ")
-            cv2.destroyAllWindows()
-            thisFramePeopleList.add(name)
-            saveFace(name, facePos)
-            updateFacesList()
-            continue
-          if (
-            enableAutoCapture
-            and name
-            and score
-            and score < TARGET_CONFIDENCE
-            and score > MATCH_THRESHOLD
-          ):
-            saveFace(name, facePos)
-            updateFacesList()
-          # draw bbox + label
-          cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
-          cv2.putText(
-            frame_bgr,
-            label_text,
-            (x1, y1 - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            color,
-            2,
-          )
-  cv2.imwrite(
-    f"./outFrames/{frameFileName}", frame_bgr
-  ) # Save the current frame as an image
-  data = []
-  if thisFramePeopleList != peopleList:
-    for person in thisFramePeopleList:
-      if person not in peopleList:
-        data.append(f'person "{person}" entered at {frameFileName}')
-    for person in peopleList:
-      if person not in thisFramePeopleList:
-        data.append(f'person "{person}" exited at {frameFileName}')
-    peopleList = thisFramePeopleList
-    f.writeline("./log.txt", "\n" + "\n".join(data))
-import re
 
 output_video_file = re.sub(r"(\.[^.]+$)", " - updated\\1", video_file)
 
@@ -415,15 +546,15 @@ def toTime(frame_number):
   return f"{hours:02}:{minutes:02}:{seconds:02}"
 
 
-# Replace frame numbers with converted time
-f.write(
-  "./log.txt",
-  re.sub(
-    r"(\d+)\.png",
-    lambda x: toTime(int(x.group(1))),
-    f.read("./log.txt"),
-  ),
-)
+# # Replace frame numbers with converted time
+# f.write(
+#   "./log.txt",
+#   re.sub(
+#     r"(\d+)\.png",
+#     lambda x: toTime(int(x.group(1))),
+#     f.read("./log.txt"),
+#   ),
+# )
 
 # Step 4: Construct the command to create a video from frames and retain audio
 combine_command = [
@@ -431,7 +562,7 @@ combine_command = [
   "-framerate",
   str(fps), # Use extracted frame rate
   "-i",
-  "outFrames/%04d.png", # Input frame pattern
+  "outFramesStep2/%04d.png", # Input frame pattern
   "-i",
   video_file, # Input original video file for audio
   "-c:v",
