@@ -85,3 +85,15 @@ person "a" entered on frame 3824.png
 person "a" exited on frame 4196.png
 
 person "a" entered on frame 4197.png
+
+person "jscurratt" entered on frame 4344.png
+person "a" exited on frame 4344.png
+
+person "a" entered on frame 4345.png
+person "jscurratt" exited on frame 4345.png
+
+person "a" exited on frame 4405.png
+
+person "a" entered on frame 4406.png
+
+person "a" exited on frame 4425.png

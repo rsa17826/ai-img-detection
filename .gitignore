@@ -19,3 +19,7 @@
 **/frames/**
 **/frame/**
 **/outFrames/**
+frames
+frame
+outFrames
+**/log.txt
