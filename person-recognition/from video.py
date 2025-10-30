@@ -11,6 +11,133 @@ from threading import Thread
 import base64, time
 import enroll_faces
 import subprocess, sys
+from pathlib import Path
+
+
+# F
+class f:
+  @staticmethod
+  def read(
+    file,
+    default="",
+    asbinary=False,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    if Path(file).exists():
+      with open(
+        file,
+        "r" + ("b" if asbinary else ""),
+        buffering=buffering,
+        encoding=encoding,
+        errors=errors,
+        newline=newline,
+        closefd=closefd,
+        opener=opener,
+      ) as f:
+        text = f.read()
+      if text:
+        return text
+      return default
+    else:
+      with open(
+        file,
+        "w" + ("b" if asbinary else ""),
+        buffering=buffering,
+        encoding=encoding,
+        errors=errors,
+        newline=newline,
+        closefd=closefd,
+        opener=opener,
+      ) as f:
+        f.write(default)
+      return default
+
+  @staticmethod
+  def writeCsv(file, rows):
+    with open(file, "w", encoding="utf-8", newline="") as f:
+      w = csv.writer(f)
+      w.writerows(rows)
+    return rows
+
+  @staticmethod
+  def write(
+    file,
+    text,
+    asbinary=False,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    with open(
+      file,
+      "w" + ("b" if asbinary else ""),
+      buffering=buffering,
+      encoding=encoding,
+      errors=errors,
+      newline=newline,
+      closefd=closefd,
+      opener=opener,
+    ) as f:
+      f.write(text)
+    return text
+
+  @staticmethod
+  def append(
+    file,
+    text,
+    asbinary=False,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    with open(
+      file,
+      "a",
+      buffering=buffering,
+      encoding=encoding,
+      errors=errors,
+      newline=newline,
+      closefd=closefd,
+      opener=opener,
+    ) as f:
+      f.write(text)
+    return text
+
+  @staticmethod
+  def writeline(
+    file,
+    text,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    with open(
+      file,
+      "a",
+      buffering=buffering,
+      encoding=encoding,
+      errors=errors,
+      newline=newline,
+      closefd=closefd,
+      opener=opener,
+    ) as f:
+      f.write("\n" + text)
+    return text
+
 
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -19,12 +146,15 @@ capidx = 0
 os.makedirs("data", exist_ok=True)
 os.makedirs("enrolled", exist_ok=True)
 os.makedirs("frames", exist_ok=True)
+os.makedirs("outFrames", exist_ok=True)
 # threshold tuning:
 # cosine similarity ranges roughly -1 to 1
 # same-person pairs are usually high (e.g. 0.6-0.9+),
 # different people are lower. You will tune this.
 MATCH_THRESHOLD = 0.6
-TARGET_CONFIDENCE = 0.7
+DB_PATH = "data/embeddings_db.npz"
+TARGET_CONFIDENCE = 0.75
+mtcnn: Any = None
 
 
 # normalize known vectors for cosine sim
@@ -46,24 +176,24 @@ def updateFacesList():
     resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
   except Exception as e:
     print(e)
-  try:
-    enroll_faces.init(print)
-    db = np.load(DB_PATH)
-    known_embeddings = db["embeddings"] # shape (N,512)
-    known_labels = db["labels"] # shape (N,)
-    # load models
-    known_norm = l2norm(known_embeddings)
-    device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-    mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
-    resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
-  except Exception as e:
-    print(e)
+  # try:
+  #   enroll_faces.init(print)
+  #   db = np.load(DB_PATH)
+  #   known_embeddings = db["embeddings"] # shape (N,512)
+  #   known_labels = db["labels"] # shape (N,)
+  #   # load models
+  #   known_norm = l2norm(known_embeddings)
+  #   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
+  #   mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
+  #   resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
+  # except Exception as e:
+  #   print(e)
 
 
+updateFacesList()
 # init attendance memory
 last_seen: dict[Any, Any] = {} # name -> unix timestamp
 # prepare attendance print file if missing
-mtcnn: Any = None
 
 
 def get_embedding(face_img_rgb):
@@ -106,15 +236,66 @@ def match_identity(embedding_vec):
     return None, None
 
 
-print(sys.argv)
-# subprocess.run("ffmpeg vidToFrames " + sys.argv[1])
+# sys.argv.append(r"C:\Users\Student\Hi Me In 10 Years [F0OkwXKcPSE].mp4")
+# print(sys.argv)
+# import subprocess
+# import sys
+
+# # Ensure the script receives a video file path as the first argument
+# if len(sys.argv) < 2:
+#     print("Usage: python script.py <video_file>")
+#     sys.exit(1)
+
+# video_file = sys.argv[1]
+# output_pattern = "frames/%04d.png" # Define how to name your frames
+
+# # Construct the command
+# command = ["ffmpeg", "-i", video_file, output_pattern]
+
+# # Run the command
+# try:
+#     subprocess.run(command, check=True)
+#     print("Frames generated successfully.")
+# except subprocess.CalledProcessError as e:
+#     print(f"An error occurred: {e}")
+
 sorted_files = sorted(os.listdir("./frames"), key=lambda x: int(x.split(".")[0]))
 maxProg = len(sorted_files)
 prog = 0
-for frame in sorted_files:
+enableAutoCapture = True
+
+def saveFace(name):
+  i = 0
+  path = f"./enrolled/{name}/{i}.png"
+  os.makedirs(f"./enrolled/{name}", exist_ok=True)
+  while os.path.exists(path):
+    i += 1
+    path = f"./enrolled/{name}/{i}.png"
+  print("adding image for ", name, "idx: ", i)
+  if facePos:
+    frame_rgb_cropped = rawframe_bgr[
+      max(0, facePos[1] - 15) : min(
+        facePos[3] + 15, rawframe_bgr.shape[0]
+      ),
+      max(0, facePos[0] - 15) : min(
+        facePos[2] + 15, rawframe_bgr.shape[1]
+      ),
+    ]
+  else:
+    frame_rgb_cropped = rawframe_bgr
+
+  cv2.imwrite(
+    path, frame_rgb_cropped
+  ) # Save the current frame as an image
+
+peopleList: set[Any] = set()
+for frameFileName in sorted_files:
   prog += 1
+  if os.path.exists(os.path.join("./outFrames", frameFileName)):
+    continue
+  thisFramePeopleList = set()
   print(str(int(prog / maxProg * 100)) + "%")
-  frame = os.path.join("./frames", frame)
+  frame = os.path.join("./frames", frameFileName)
   print(frame)
 
   frame_bgr = cv2.imread(frame)
@@ -125,62 +306,83 @@ for frame in sorted_files:
   # boxes: [[x1,y1,x2,y2], ...]
   # probs: confidence per face
   facePos = None
-  if mtcnn:
-    boxes, probs = mtcnn.detect(frame_rgb)
+  faceFails = True
+  while faceFails:
+    faceFails = False
+    if mtcnn:
+      boxes, probs = mtcnn.detect(frame_rgb)
 
-    if boxes is not None:
-      for box, prob in zip(boxes, probs):
-        if prob is None:
-          continue
-        x1, y1, x2, y2 = [int(v) for v in box]
+      if boxes is not None:
+        for box, prob in zip(boxes, probs):
+          if prob is None:
+            continue
+          x1, y1, x2, y2 = [int(v) for v in box]
 
-        # crop face region
-        face_crop_rgb = frame_rgb[y1:y2, x1:x2]
-        if face_crop_rgb.size == 0:
-          continue
+          # crop face region
+          face_crop_rgb = frame_rgb[y1:y2, x1:x2]
+          if face_crop_rgb.size == 0:
+            continue
 
-        emb = None
-        try:
-          emb = get_embedding(face_crop_rgb)
-        except Exception as e:
-          continue
-        if emb is None:
-          continue
+          emb = None
+          try:
+            emb = get_embedding(face_crop_rgb)
+          except Exception as e:
+            continue
+          if emb is None:
+            continue
 
-        try:
-          name, score = match_identity(emb)
-        except Exception as e:
-          print(e)
-          continue
-        label_text = "Unknown"
-        color = (0, 0, 255) # red in BGR
-        if name is not None:
-          label_text = f"{name} ({score:.2f})"
-          color = (0, 255, 0) # green
-
-          now = time.time()
-          last_time = last_seen.get(name, 0)
-          # print attendance
-          last_seen[name] = now
-          ts_str = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now))
-          print(f"[print] {ts_str} - {name} present")
-
-          # append to CSV
-          print([{"timestamp": ts_str, "name": name}])
-        # draw bbox + label
-        cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(
-          frame_bgr,
-          label_text,
-          (x1, y1 - 10),
-          cv2.FONT_HERSHEY_SIMPLEX,
-          0.6,
-          color,
-          2,
-        )
-  if frame_bgr is None:
-    print(f"Error loading image: {frame}")
-  else:
-    frame_bgr = cv2.flip(frame_bgr, 1) # Flip the frame for a mirror effect
-    cv2.imshow("a", frame_bgr)
-    cv2.waitKey(100)
+          try:
+            name, score = match_identity(emb)
+          except Exception as e:
+            print(e)
+            continue
+          label_text = "Unknown"
+          color = (0, 0, 255) # red in BGR
+          if name is not None:
+            label_text = f"{name} ({score:.2f})"
+            color = (0, 255, 0) # green
+            thisFramePeopleList.add(name)
+          else:
+            faceFails = True
+            cv2.imshow("a", frame_bgr)
+            cv2.waitKey(1)
+            name = input("who is this? ")
+            cv2.destroyAllWindows()
+            thisFramePeopleList.add(name)
+            saveFace(name)
+            updateFacesList()
+            continue
+          if (
+            enableAutoCapture
+            and name
+            and score
+            and score < TARGET_CONFIDENCE
+            and score > MATCH_THRESHOLD
+          ):
+            saveFace(name)
+            updateFacesList()
+          # draw bbox + label
+          cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
+          cv2.putText(
+            frame_bgr,
+            label_text,
+            (x1, y1 - 10),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            0.6,
+            color,
+            2,
+          )
+          facePos = [x1, y1, x2, y2]
+  cv2.imwrite(
+    f"./outFrames/{frameFileName}", frame_bgr
+  ) # Save the current frame as an image
+  data = []
+  if thisFramePeopleList != peopleList:
+    for person in thisFramePeopleList:
+      if person not in peopleList:
+        data.append(f'person "{person}" entered on frame {frameFileName}')
+    for person in peopleList:
+      if person not in thisFramePeopleList:
+        data.append(f'person "{person}" exited on frame {frameFileName}')
+    peopleList = thisFramePeopleList
+    f.writeline("./log.txt", "\n" + "\n".join(data))

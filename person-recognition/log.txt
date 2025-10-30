@@ -1,0 +1,87 @@
+
+
+person "a" entered on frame 2288.png
+
+person "a" entered on frame 0001.png
+
+person "a" exited on frame 0088.png
+
+person "a" entered on frame 0089.png
+
+person "a" exited on frame 0362.png
+
+person "a" entered on frame 0363.png
+
+person "a" exited on frame 0365.png
+
+person "a" entered on frame 0366.png
+
+person "a" exited on frame 0474.png
+
+person "a" entered on frame 0475.png
+
+person "a" exited on frame 0479.png
+
+person "a" entered on frame 0480.png
+
+person "a" exited on frame 0667.png
+
+person "a" entered on frame 0668.png
+
+person "a" exited on frame 1383.png
+
+person "a" entered on frame 1634.png
+
+person "a" exited on frame 1957.png
+
+person "a" entered on frame 1958.png
+
+person "a" exited on frame 1962.png
+
+person "a" entered on frame 1964.png
+
+person "a" exited on frame 2442.png
+
+person "a" entered on frame 2443.png
+
+person "a" exited on frame 2558.png
+
+person "a" entered on frame 2559.png
+
+person "jscurratt" entered on frame 2593.png
+person "a" exited on frame 2593.png
+
+person "a" entered on frame 2594.png
+person "jscurratt" exited on frame 2594.png
+
+person "a" exited on frame 3019.png
+
+person "a" entered on frame 3021.png
+
+person "jscurratt" entered on frame 3045.png
+
+person "jscurratt" exited on frame 3046.png
+
+person "a" exited on frame 3063.png
+
+person "a" entered on frame 3064.png
+
+person "a" exited on frame 3141.png
+
+person "a" entered on frame 3142.png
+
+person "a" exited on frame 3146.png
+
+person "a" entered on frame 3289.png
+
+person "a" exited on frame 3784.png
+
+person "a" entered on frame 3787.png
+
+person "a" exited on frame 3823.png
+
+person "a" entered on frame 3824.png
+
+person "a" exited on frame 4196.png
+
+person "a" entered on frame 4197.png
