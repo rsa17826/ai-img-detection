@@ -246,17 +246,18 @@ if len(sys.argv) < 2:
   sys.exit(1)
 
 video_file = sys.argv[1]
-output_pattern = "frames/%04d.png" # Define how to name your frames
+if not os.path.exists("./frames/00000000000000000001.png"):
+  output_pattern = "frames/%020d.png" # Define how to name your frames
 
-# Construct the command
-command = ["ffmpeg", "-i", video_file, output_pattern]
+  # Construct the command
+  command = ["ffmpeg", "-i", video_file, output_pattern]
 
-# Run the command
-try:
-  subprocess.run(command, check=True)
-  print("Frames generated successfully.")
-except subprocess.CalledProcessError as e:
-  print(f"An error occurred: {e}")
+  # Run the command
+  try:
+    subprocess.run(command, check=True)
+    print("Frames generated successfully.")
+  except subprocess.CalledProcessError as e:
+    print(f"An error occurred: {e}")
 
 sorted_files = sorted(os.listdir("./frames"), key=lambda x: int(x.split(".")[0]))
 maxProg = len(sorted_files)
@@ -307,7 +308,7 @@ for frameFileName in sorted_files:
   if os.path.exists(os.path.join("./outFrames", frameFileName)):
     continue
   thisFramePeopleList = set()
-  progress_bar(prog, maxProg, prefix="Progress")
+  progress_bar(prog, maxProg, prefix="(1/2) detecting faces")
   frame = os.path.join("./frames", frameFileName)
   #   print(frame)
 
@@ -364,10 +365,14 @@ for frameFileName in sorted_files:
             cv2.waitKey(1)
             name = input("who is this? ")
             cv2.destroyAllWindows()
-            thisFramePeopleList.add(name)
-            saveFace(name, facePos)
-            updateFacesList()
-            continue
+            if not name:
+              faceFails = False
+              continue
+            else:
+              thisFramePeopleList.add(name)
+              saveFace(name, facePos)
+              updateFacesList()
+              continue
           if (
             enableAutoCapture
             and name
@@ -507,6 +512,7 @@ for name in names:
   }
   if name not in colors:
     colors[name] = text_to_color(name)
+prog = 0
 for frameFileName in sorted_files:
   frameName = int(frameFileName.replace(".png", ""))
   prog += 1
@@ -522,10 +528,12 @@ for frameFileName in sorted_files:
           activeActions[a[0]]["nextActionFrame"] = nextActionFrame
           activeActions[a[0]]["nextActionTime"] = toTime(nextActionFrame)
           activeActions[a[0]]["lastEndFrame"] = frameName
-  progress_bar(prog, maxProg, prefix="Progress")
+  progress_bar(prog, maxProg, prefix="(2/2) generating progress bars")
   frame_bgr = cv2.imread(os.path.join("./outFrames", str(frameFileName)))
   y = 0
   for name, temp in activeActions.items():
+    if temp["nextActionTime"] == "N/A":
+      continue
     progress = int(
       (frameName - temp["lastEndFrame"])
       / (temp["nextActionFrame"] - temp["lastEndFrame"])
@@ -592,7 +600,7 @@ combine_command = [
   "-framerate",
   str(fps), # Use extracted frame rate
   "-i",
-  "outFramesStep2/%04d.png", # Input frame pattern
+  "outFramesStep2/%020d.png", # Input frame pattern
   "-i",
   video_file, # Input original video file for audio
   "-c:v",
