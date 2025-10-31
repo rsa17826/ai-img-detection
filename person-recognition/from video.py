@@ -188,6 +188,7 @@ def updateFacesList():
   except Exception as e:
     print(e)
 
+
 updateFacesList()
 # init attendance memory
 last_seen: dict[Any, Any] = {} # name -> unix timestamp
@@ -281,6 +282,7 @@ def saveFace(name, facePos: Any = None):
 
   cv2.imwrite(path, frame_rgb_cropped) # Save the current frame as an image
 
+
 prog = 0
 
 peopleList: set[Any] = set()
@@ -368,6 +370,9 @@ for frameFileName in sorted_files:
             color,
             2,
           )
+    else:
+      print("error, model not loaded")
+      os._exit(-1)
   cv2.imwrite(
     f"./outFrames/{frameFileName}", frame_bgr
   ) # Save the current frame as an image
