@@ -260,8 +260,24 @@ except subprocess.CalledProcessError as e:
 
 sorted_files = sorted(os.listdir("./frames"), key=lambda x: int(x.split(".")[0]))
 maxProg = len(sorted_files)
+colors = {}
 prog = 0
 enableAutoCapture = True
+
+
+def text_to_color(text):
+  """Convert text to a color using its hash."""
+  # Create a hash of the text
+  hash_object = hashlib.md5(
+    text.encode()
+  ) # You can use sha256 or any other hash function
+  hash_hex = hash_object.hexdigest()
+
+  # Convert the first 6 characters of the hex to RGB
+  r = int(hash_hex[:2], 16) # red
+  g = int(hash_hex[2:4], 16) # green
+  b = int(hash_hex[4:6], 16) # blue
+  return (r, g, b)
 
 
 def saveFace(name, facePos: Any = None):
@@ -338,7 +354,9 @@ for frameFileName in sorted_files:
           facePos = [x1, y1, x2, y2]
           if name is not None:
             label_text = f"{name} ({score:.2f})"
-            color = (0, 255, 0) # green
+            if name not in name:
+              colors[name] = text_to_color(name)
+            color = colors[name]
             thisFramePeopleList.add(name)
           else:
             faceFails = True
@@ -386,21 +404,6 @@ for frameFileName in sorted_files:
         data.append(f'person "{person}" exited at {frameFileName}')
     peopleList = thisFramePeopleList
     f.writeline("./log.txt", "\n" + "\n".join(data))
-
-
-def text_to_color(text):
-  """Convert text to a color using its hash."""
-  # Create a hash of the text
-  hash_object = hashlib.md5(
-    text.encode()
-  ) # You can use sha256 or any other hash function
-  hash_hex = hash_object.hexdigest()
-
-  # Convert the first 6 characters of the hex to RGB
-  r = int(hash_hex[:2], 16) # red
-  g = int(hash_hex[2:4], 16) # green
-  b = int(hash_hex[4:6], 16) # blue
-  return (r, g, b)
 
 
 # load all people that are in the video and when in the video they are
@@ -494,8 +497,6 @@ else:
 print(fps, "fps")
 
 
-colors = {}
-
 activeActions: Any = {}
 for name in names:
   activeActions[name] = {
@@ -504,7 +505,8 @@ for name in names:
     "nextActionTime": 0,
     "lastEndFrame": 0,
   }
-  colors[name] = text_to_color(name)
+  if name not in colors:
+    colors[name] = text_to_color(name)
 for frameFileName in sorted_files:
   frameName = int(frameFileName.replace(".png", ""))
   prog += 1
