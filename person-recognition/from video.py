@@ -140,6 +140,14 @@ class f:
     return text
 
 
+def progress_bar(iteration, total, prefix="", length=40, fill="█"):
+  percent = iteration / total
+  filled_length = int(length * percent)
+  bar = fill * filled_length + "-" * (length - filled_length)
+  sys.stdout.write(f"\r{prefix} |{bar}| {percent:.1%}")
+  sys.stdout.flush()
+
+
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # Index of the camera to use
@@ -292,9 +300,9 @@ enableAutoCapture = True
 #   if os.path.exists(os.path.join("./outFrames", frameFileName)):
 #     continue
 #   thisFramePeopleList = set()
-#   print(str(int(prog / maxProg * 100)) + "%")
+#   progress_bar(prog, maxProg, prefix="Progress")
 #   frame = os.path.join("./frames", frameFileName)
-#   print(frame)
+##   print(frame)
 
 #   frame_bgr = cv2.imread(frame)
 
@@ -425,9 +433,6 @@ for line in f.read("./log.txt").split("\n"):
       if frame_match:
         frame = int(frame_match.group(1))
         foundSameBefore = False
-        # Initialize frame list if not present
-        if frame not in actionList:
-          actionList[frame] = []
         if frame - 1 in actionList:
           i = 0
           for action in actionList[frame - 1]:
@@ -439,6 +444,9 @@ for line in f.read("./log.txt").split("\n"):
             del actionList[(frame - 1)]
         # Append the [name, entered] list to actionList
         if not foundSameBefore:
+          # Initialize frame list if not present
+          if frame not in actionList:
+            actionList[frame] = []
           actionList[frame].append([name, entered])
 
 
@@ -464,26 +472,23 @@ def rerange(val, low1, high1, low2, high2):
 
 activeActions: Any = {}
 nextActionFrame = 0
+lastEndFrame = 0
 for name in names:
   activeActions[name] = False
 for frameFileName in sorted_files:
   frameName = int(frameFileName.replace(".png", ""))
   prog += 1
   if frameName in actionList:
+    lastEndFrame = frameName
     for action in actionList[frameName]:
       nextActionFrame = findNextAction(frameName, action[0])
-      print(
-        action,
-        frameName,
-      )
-    print(
-      str(int(prog / maxProg * 100)) + "%",
-      str(int(frameName / nextActionFrame * 100)) + "%",
-    )
+  progress_bar(prog, maxProg, prefix="Progress")
   frame_bgr = cv2.imread(os.path.join("./outFrames", str(frameFileName)))
   y = 0
   for name, action in activeActions.items():
-    progress = int(frameName / nextActionFrame * 100)
+    progress = int(
+      (frameName - lastEndFrame) / (nextActionFrame - lastEndFrame) * 100
+    )
     y += 20
     cv2.putText(
       frame_bgr,
