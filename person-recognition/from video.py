@@ -187,21 +187,8 @@ def updateFacesList():
     resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
   except Exception as e:
     print(e)
-  # try:
-  #   enroll_faces.init(print)
-  #   db = np.load(DB_PATH)
-  #   known_embeddings = db["embeddings"] # shape (N,512)
-  #   known_labels = db["labels"] # shape (N,)
-  #   # load models
-  #   known_norm = l2norm(known_embeddings)
-  #   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-  #   mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
-  #   resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
-  # except Exception as e:
-  #   print(e)
 
-
-# updateFacesList()
+updateFacesList()
 # init attendance memory
 last_seen: dict[Any, Any] = {} # name -> unix timestamp
 # prepare attendance print file if missing
