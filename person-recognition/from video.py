@@ -13,6 +13,7 @@ import enroll_faces
 import subprocess, sys
 from pathlib import Path
 import re, hashlib
+from typing import Dict, List
 
 
 # F
@@ -409,9 +410,6 @@ def text_to_color(text):
   return (r, g, b)
 
 
-from typing import Dict, List
-
-
 actionList: Dict[int, List[List[Any]]] = {}
 names: set[str] = set()
 for line in f.read("./log.txt").split("\n"):
@@ -470,54 +468,13 @@ def rerange(val, low1, high1, low2, high2):
   return ((val - low1) / (high1 - low1)) * (high2 - low2) + low2
 
 
-activeActions: Any = {}
-nextActionFrame = 0
-lastEndFrame = 0
-for name in names:
-  activeActions[name] = False
-for frameFileName in sorted_files:
-  frameName = int(frameFileName.replace(".png", ""))
-  prog += 1
-  if frameName in actionList:
-    lastEndFrame = frameName
-    for action in actionList[frameName]:
-      nextActionFrame = findNextAction(frameName, action[0])
-  progress_bar(prog, maxProg, prefix="Progress")
-  frame_bgr = cv2.imread(os.path.join("./outFrames", str(frameFileName)))
-  y = 0
-  for name, action in activeActions.items():
-    progress = int(
-      (frameName - lastEndFrame) / (nextActionFrame - lastEndFrame) * 100
-    )
-    y += 20
-    cv2.putText(
-      frame_bgr,
-      name,
-      (15, y),
-      cv2.FONT_HERSHEY_SIMPLEX,
-      0.6,
-      text_to_color(name),
-      2,
-    )
-    cv2.rectangle(frame_bgr, (15, y + 10), (115, y + 20), (0, 0, 0), -1)
-    cv2.rectangle(
-      frame_bgr,
-      (15, y + 10),
-      (int(15 + progress), y + 20),
-      text_to_color(name),
-      -1,
-    )
-    y += 20
-    cv2.putText(
-      frame_bgr,
-      str(progress) + "%" + " - " + ("entering" if action else "exiting"),
-      (130, y),
-      cv2.FONT_HERSHEY_SIMPLEX,
-      0.6,
-      text_to_color(name),
-      2,
-    )
-  cv2.imwrite(f"./outFramesStep2/{frameFileName}", frame_bgr)
+def toTime(frame_number):
+  """Convert frame number to time in HH:MM:SS format."""
+  total_seconds = frame_number / fps
+  hours = int(total_seconds // 3600)
+  minutes = int((total_seconds % 3600) // 60)
+  seconds = int(total_seconds % 60)
+  return f"{hours:02}:{minutes:02}:{seconds:02}"
 
 
 output_video_file = re.sub(r"(\.[^.]+$)", " - updated\\1", video_file)
@@ -542,13 +499,87 @@ else:
 print(fps, "fps")
 
 
-def toTime(frame_number):
-  """Convert frame number to time in HH:MM:SS format."""
-  total_seconds = frame_number / fps
-  hours = int(total_seconds // 3600)
-  minutes = int((total_seconds % 3600) // 60)
-  seconds = int(total_seconds % 60)
-  return f"{hours:02}:{minutes:02}:{seconds:02}"
+colors = {}
+
+activeActions: Any = {}
+for name in names:
+  activeActions[name] = {
+    "entered": False,
+    "nextActionFrame": 0,
+    "nextActionTime": 0,
+    "lastEndFrame": 0,
+  }
+  colors[name] = text_to_color(name)
+for frameFileName in sorted_files:
+  frameName = int(frameFileName.replace(".png", ""))
+  prog += 1
+  if frameName in actionList:
+    for personName, action in activeActions.items():
+      nextActionFrame = findNextAction(frameName, personName)
+      activeActions[name] = {}
+      activeActions[name]["nextActionFrame"] = nextActionFrame
+      activeActions[name]["nextActionTime"] = "N/A"
+      activeActions[name]["lastEndFrame"] = frameName
+      activeActions[name]["entered"] = False
+      if nextActionFrame in actionList:
+        for a in actionList[nextActionFrame]:
+          activeActions[a[0]] = {}
+          activeActions[a[0]]["entered"] = a[1]
+          activeActions[a[0]]["nextActionFrame"] = nextActionFrame
+          activeActions[a[0]]["nextActionTime"] = toTime(nextActionFrame)
+          activeActions[a[0]]["lastEndFrame"] = frameName
+  progress_bar(prog, maxProg, prefix="Progress")
+  frame_bgr = cv2.imread(os.path.join("./outFrames", str(frameFileName)))
+  y = 0
+  for name, temp in activeActions.items():
+    progress = int(
+      (frameName - temp["lastEndFrame"])
+      / (temp["nextActionFrame"] - temp["lastEndFrame"])
+      * 100
+    )
+    y += 20
+    cv2.putText(
+      frame_bgr,
+      name,
+      (15, y),
+      cv2.FONT_HERSHEY_SIMPLEX,
+      0.6,
+      colors[name],
+      2,
+    )
+    cv2.rectangle(frame_bgr, (15, y + 10), (115, y + 20), (0, 0, 0), -1)
+    if temp["entered"]:
+      cv2.rectangle(
+        frame_bgr,
+        (15, y + 10),
+        (int(15 + progress), y + 20),
+        colors[name],
+        -1,
+      )
+    else:
+      cv2.rectangle(
+        frame_bgr,
+        (int(15 + progress), y + 10),
+        (115, y + 20),
+        colors[name],
+        -1,
+      )
+    y += 20
+    cv2.putText(
+      frame_bgr,
+      str(progress)
+      + "%"
+      + " - "
+      + ("entering" if temp["entered"] else "exiting")
+      + " at "
+      + temp["nextActionTime"],
+      (130, y),
+      cv2.FONT_HERSHEY_SIMPLEX,
+      0.6,
+      colors[name],
+      2,
+    )
+  cv2.imwrite(f"./outFramesStep2/{frameFileName}", frame_bgr)
 
 
 # # Replace frame numbers with converted time
