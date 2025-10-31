@@ -354,7 +354,7 @@ for frameFileName in sorted_files:
           facePos = [x1, y1, x2, y2]
           if name is not None:
             label_text = f"{name} ({score:.2f})"
-            if name not in name:
+            if name not in colors:
               colors[name] = text_to_color(name)
             color = colors[name]
             thisFramePeopleList.add(name)
