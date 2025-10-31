@@ -361,9 +361,10 @@ for frameFileName in sorted_files:
             thisFramePeopleList.add(name)
           else:
             faceFails = True
+            cv2.rectangle(frame_bgr, (x1, y1), (x2, y2), color, 2)
             cv2.imshow("a", frame_bgr)
             cv2.waitKey(1)
-            name = input("who is this? ")
+            name = input("\nwho is this? ")
             cv2.destroyAllWindows()
             if not name:
               faceFails = False
