@@ -514,6 +514,8 @@ for name in names:
     colors[name] = text_to_color(name)
 prog = 0
 for frameFileName in sorted_files:
+  if os.path.exists("./outFramesStep2/" + frameFileName):
+    continue
   frameName = int(frameFileName.replace(".png", ""))
   prog += 1
   if frameName in actionList:
