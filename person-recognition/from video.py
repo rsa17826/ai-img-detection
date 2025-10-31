@@ -516,14 +516,11 @@ for frameFileName in sorted_files:
   if frameName in actionList:
     for personName, action in activeActions.items():
       nextActionFrame = findNextAction(frameName, personName)
-      activeActions[name] = {}
-      activeActions[name]["nextActionFrame"] = nextActionFrame
-      activeActions[name]["nextActionTime"] = "N/A"
-      activeActions[name]["lastEndFrame"] = frameName
-      activeActions[name]["entered"] = False
+      activeActions[personName]["nextActionFrame"] = nextActionFrame
+      activeActions[personName]["nextActionTime"] = "N/A"
+      activeActions[personName]["entered"] = False
       if nextActionFrame in actionList:
         for a in actionList[nextActionFrame]:
-          activeActions[a[0]] = {}
           activeActions[a[0]]["entered"] = a[1]
           activeActions[a[0]]["nextActionFrame"] = nextActionFrame
           activeActions[a[0]]["nextActionTime"] = toTime(nextActionFrame)
