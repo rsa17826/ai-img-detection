@@ -1,6 +1,6 @@
 ## user setup
 
-run this in powershell after installing visual studio build tools with desktop development with c++, python 3.13, and python 3.9
+run this in powershell after installing visual studio build tools with desktop development with c++, python 3.13, and python 3.9, and ffmpeg if using the "from video" script
 
 ```pwsh
 git clone https://github.com/rsa17826/ai-img-detection.git ./ai-img-detection
