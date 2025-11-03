@@ -2,7 +2,8 @@ import cv2
 import torch
 import numpy as np
 import time
-import pandas as pd
+
+# import pandas as pd
 from facenet_pytorch import MTCNN, InceptionResnetV1
 import os
 from typing import Any
@@ -189,7 +190,6 @@ def updateFacesList():
     print(e)
 
 
-updateFacesList()
 # init attendance memory
 last_seen: dict[Any, Any] = {} # name -> unix timestamp
 # prepare attendance print file if missing
@@ -235,7 +235,7 @@ def match_identity(embedding_vec):
     return None, None
 
 
-# sys.argv.append(r"C:\Users\Student\Hi Me In 10 Years [F0OkwXKcPSE].mp4")
+sys.argv.append(r"C:\Users\Student\Hi Me In 10 Years [F0OkwXKcPSE].mp4")
 # print(sys.argv)
 import subprocess
 import sys
@@ -305,10 +305,14 @@ prog = 0
 peopleList: set[Any] = set()
 for frameFileName in sorted_files:
   prog += 1
+  progress_bar(prog, maxProg, prefix="(1/2) detecting faces")
   if os.path.exists(os.path.join("./outFrames", frameFileName)):
     continue
+  else:
+    if not mtcnn:
+      updateFacesList()
+
   thisFramePeopleList = set()
-  progress_bar(prog, maxProg, prefix="(1/2) detecting faces")
   frame = os.path.join("./frames", frameFileName)
   #   print(frame)
 
@@ -501,6 +505,24 @@ else:
   sys.exit(1)
 
 print(fps, "fps")
+import statistics
+
+import time
+
+
+class T:
+  def __init__(self, name):
+    self.avg: List[float] = []
+    self.name: str = name
+
+  def start(self):
+    self.start_time = time.time()
+
+  def stop(self):
+    self.avg.append(time.time() - self.start_time)
+
+  def log(self):
+    print("--- %f %s ---" % (statistics.mean(self.avg), self.name))
 
 
 activeActions: Any = {}
@@ -513,29 +535,42 @@ for name in names:
   }
   if name not in colors:
     colors[name] = text_to_color(name)
+t1 = T("1")
+t2 = T("2")
+t3 = T("3")
 prog = 0
 for frameFileName in sorted_files:
-  if os.path.exists("./outFramesStep2/" + frameFileName):
-    continue
-  frameName = int(frameFileName.replace(".png", ""))
   prog += 1
+  frameName = int(frameFileName.replace(".png", ""))
   if frameName in actionList:
     for personName, action in activeActions.items():
       nextActionFrame = findNextAction(frameName, personName)
-      activeActions[personName]["nextActionFrame"] = nextActionFrame
-      activeActions[personName]["nextActionTime"] = "N/A"
-      activeActions[personName]["entered"] = False
       if nextActionFrame in actionList:
-        for a in actionList[nextActionFrame]:
-          activeActions[a[0]]["entered"] = a[1]
-          activeActions[a[0]]["nextActionFrame"] = nextActionFrame
-          activeActions[a[0]]["nextActionTime"] = toTime(nextActionFrame)
-          activeActions[a[0]]["lastEndFrame"] = frameName
+        nea = None
+        for thing in actionList[nextActionFrame]:
+          if thing[0]==personName:
+            nea=thing
+            break
+        assert nea is not None
+        activeActions[personName]["entered"] = nea[1]
+        activeActions[personName]["nextActionFrame"] = nextActionFrame
+        activeActions[personName]["nextActionTime"] = toTime(nextActionFrame)
+        activeActions[personName]["lastEndFrame"] = frameName
+      else:
+        activeActions[personName]["nextActionFrame"] = -1
+        activeActions[personName]["nextActionTime"] = "N/A"
+        activeActions[personName]["entered"] = False
   progress_bar(prog, maxProg, prefix="(2/2) generating progress bars")
+  if os.path.exists("./outFramesStep2/" + frameFileName):
+    continue
+  # t1.start()
   frame_bgr = cv2.imread(os.path.join("./outFrames", str(frameFileName)))
+  # t1.stop()
   y = 0
   for name, temp in activeActions.items():
     if temp["nextActionTime"] == "N/A":
+      continue
+    if temp["nextActionFrame"] == -1:
       continue
     progress = int(
       (frameName - temp["lastEndFrame"])
@@ -543,6 +578,8 @@ for frameFileName in sorted_files:
       * 100
     )
     y += 20
+    # t2.start()
+
     cv2.putText(
       frame_bgr,
       name,
@@ -584,7 +621,13 @@ for frameFileName in sorted_files:
       colors[name],
       2,
     )
+    # t2.stop()
+  # t3.start()
   cv2.imwrite(f"./outFramesStep2/{frameFileName}", frame_bgr)
+  # t3.stop()
+# t1.log()
+# t2.log()
+# t3.log()
 
 
 # # Replace frame numbers with converted time
