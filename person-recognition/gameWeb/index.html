@@ -20,6 +20,10 @@
         eel.expose(loadData)
         eel.expose(hideProg)
         eel.expose(setProg)
+        eel.expose(setHighscoreMessage)
+        function setHighscoreMessage(msg) {
+          a.qs("#highscoreMessage").textContent = msg
+        }
         function setProg(prog, maxProg, name) {
           if (!window.progBar) {
             window.progBar = new (loadlib("progress bar"))(
@@ -123,8 +127,16 @@
       overflow: hidden;
       background-color: #111;
     }
+    #highscoreMessage{
+      position: absolute;
+      top: 10px;
+      left: 30px;
+      font-weight: bolder;
+      color: aqua;
+    }
   </style>
   <body>
+    <h2 id="highscoreMessage">none</h2>
     <div class="v">
       <div class="v c">
         <div class="h">

@@ -156,7 +156,7 @@ eel.init("gameWeb")
 # Variable to hold the capture object; initially set to 0
 cap: Any = 0
 gamecap: Any = 0
-MATCH_THRESHOLD = 0.6
+MATCH_THRESHOLD = 0.55
 DB_PATH = "data/embeddings_db.npz"
 TARGET_CONFIDENCE = 0.75
 mtcnn: Any = None
@@ -384,7 +384,7 @@ def reset():
     highScore = int(f.read("./highScore.txt", "0"))
   except Exception as e:
     highScore = -1
-  size = 15
+  size = 35
 
 
 autoReset = False
@@ -437,10 +437,17 @@ def comstr(item: Any) -> str:
   return re.sub(reg[0], reg[1], str(item))
 
 
+def say(msg):
+  log(msg)
+
+
+highScoreOwner = f.read("./highScorename.txt", "")
 faceName = None
 updateFacesList()
 prev_time: float = time.time()
 gameScores: Any = {}
+shouldSayNewHighScores: Any = {}
+
 while True:
   if not cap or not cap.isOpened():
     # sendBlankFrame()
@@ -471,23 +478,8 @@ while True:
     (255, 255, 255),
     2,
   )
-  cv2.putText(
-    frame,
-    "SCORE: " + comstr(gameScore),
-    (20, 80),
-    cv2.FONT_HERSHEY_SIMPLEX,
-    1,
-    (255, 255, 255),
-    2,
-  )
-  cv2.putText(
-    frame,
-    "HIGH SCORE: " + comstr(highScore),
-    (20, 110),
-    cv2.FONT_HERSHEY_SIMPLEX,
-    1,
-    (255, 255, 255),
-    2,
+  eel.setHighscoreMessage(
+    "HIGH SCORE: " + comstr(highScore) + " by " + highScoreOwner,
   )
   deathPosRand.maxNum = width
   a = spawnNewDeathRand.next()
@@ -577,6 +569,7 @@ while True:
             h = int(h)
             if collides(x, y, w, h, facePos):
               gameScores[name] = 0
+              shouldSayNewHighScores[name] = True
               collision = True
           if not collision:
             if name not in gameScores:
@@ -585,7 +578,7 @@ while True:
           cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
           cv2.putText(
             frame,
-            name,
+            name + ": " + toPlaces(score, 1, 2),
             (x1, y1 - 10),
             cv2.FONT_HERSHEY_SIMPLEX,
             0.6,
@@ -603,6 +596,28 @@ while True:
           )
         for scorereName, gameScore in gameScores.items():
           if gameScore > highScore:
+            highScore = gameScore
+            if highScoreOwner:
+              if scorereName != highScoreOwner:
+                say(
+                  scorereName
+                  + " overtook "
+                  + highScoreOwner
+                  + " with a score of "
+                  + str(gameScore)
+                )
+              else:
+                if (
+                  scorereName in shouldSayNewHighScores
+                  and shouldSayNewHighScores[scorereName]
+                ):
+                  say(
+                    scorereName
+                    + " got a new high score of "
+                    + str(gameScore)
+                  )
+                  shouldSayNewHighScores[scorereName] = False
+            highScoreOwner = str(scorereName)
             f.write("./highScore.txt", str(gameScore))
             f.write("./highScorename.txt", str(scorereName))
         # if (
