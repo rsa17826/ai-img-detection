@@ -671,5 +671,6 @@ try:
   shutil.rmtree("./outFrames")
   shutil.rmtree("./outFramesStep2")
   os.remove("./lastFile")
+  os.remove("./log.txt")
 except subprocess.CalledProcessError as e:
   print(f"An error occurred while combining frames into a video: {e}")
