@@ -11,11 +11,10 @@ import eel
 from threading import Thread
 import base64, time
 import enroll_faces
-import subprocess, sys
+import subprocess, sys, shutil
 from pathlib import Path
 import re, hashlib
 from typing import Dict, List
-
 
 # F
 class f:
@@ -234,8 +233,7 @@ def match_identity(embedding_vec):
   else:
     return None, None
 
-
-sys.argv.append(r"C:\Users\Student\Hi Me In 10 Years [F0OkwXKcPSE].mp4")
+sys.argv.append(f.read("./lastFile"))
 # print(sys.argv)
 import subprocess
 import sys
@@ -244,6 +242,8 @@ import sys
 if len(sys.argv) < 2:
   print("Usage: python script.py <video_file>")
   sys.exit(1)
+else:
+  f.write("./lastFile", sys.argv[1])
 
 video_file = sys.argv[1]
 if not os.path.exists("./frames/00000000000000000001.png"):
@@ -667,5 +667,9 @@ combine_command = [
 try:
   subprocess.run(combine_command, check=True)
   print(f"Video '{output_video_file}' created successfully.")
+  shutil.rmtree("./frames")
+  shutil.rmtree("./outFrames")
+  shutil.rmtree("./outFramesStep2")
+  os.remove("./lastFile")
 except subprocess.CalledProcessError as e:
   print(f"An error occurred while combining frames into a video: {e}")
