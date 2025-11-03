@@ -8,6 +8,7 @@
 **/frozen_inference_graph.pb
 **/graph.pbtxt
 **/highScore.txt
+**/highScorename.txt
 **/model.ckpt.data-00000-of-00001
 **/model.ckpt.index
 **/model.ckpt.meta
