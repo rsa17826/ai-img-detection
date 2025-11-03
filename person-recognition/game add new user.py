@@ -151,7 +151,7 @@ BLANK_IMAGE = (
 )
 
 # Initialize Eel, a Python library for creating simple Electron-like desktop apps
-eel.init("gameWeb")
+eel.init("gameWebNewUser")
 
 # Variable to hold the capture object; initially set to 0
 cap: Any = 0
@@ -285,10 +285,10 @@ def sendBlankFrame():
 # Start the Eel application in a new thread
 Thread(
   target=lambda: eel.start(
-    mode=None, port=15674, close_callback=lambda *x: os._exit(0), shutdown_delay=10
+    mode=None, port=15675, close_callback=lambda *x: os._exit(0), shutdown_delay=10
   )
 ).start()
-os.system("start http://127.0.0.1:15674")
+os.system("start http://127.0.0.1:15675")
 
 
 # Function to format numbers into a specific format
@@ -337,38 +337,6 @@ def toPlaces(num: Any, pre=0, post=0, func=round):
   return num
 
 
-def reset():
-  global lastFace, deathBoxList, speed, score, deathPosRand, stopped, highScore, size, dirRand
-  lastFace = None
-  deathBoxList = []
-  speed = 3
-  gameScore = 0
-  deathPosRand = BalancedRand()
-  # spawnNewDeathRand = BalancedRand(0, 1, 0.1, 0.5)
-  dirRand = BalancedRand(0, 3, 0.1, 0.5)
-  stopped = False
-  try:
-    highScore = int(f.read("./highScore.txt", "0"))
-  except Exception as e:
-    highScore = -1
-  size = 35
-
-
-autoReset = False
-lastFace: Any = 0
-deathBoxList: Any = 0
-speed: Any = 0
-gameScore: Any = 0
-deathPosRand: Any = 0
-# spawnNewDeathRand: Any = 0
-stopped: Any = 0
-highScore: Any = 0
-size: Any = 0
-dirRand: Any = 0
-
-reset()
-
-
 def collides(x, y, w, h, face):
   x2, y2, w2, h2 = face
   h2 -= y2
@@ -376,6 +344,7 @@ def collides(x, y, w, h, face):
   return not (x >= x2 + w2 or x + w <= x2 or y >= y2 + h2 or y + h <= y2)
 
 
+@eel.expose
 def updateFacesList():
   global mtcnn, known_norm, resnet, device, db, known_embeddings, known_labels
   try:
@@ -391,6 +360,7 @@ def updateFacesList():
   except Exception as e:
     log(e)
   eel.hideProg()
+  f.write('./updateGameUserList')
 
 
 def comstr(item: Any) -> str:
@@ -404,42 +374,31 @@ def comstr(item: Any) -> str:
   return re.sub(reg[0], reg[1], str(item))
 
 
-def say(msg):
-  log(msg)
+@eel.expose
+def addFaceToList(val):
+  global faceName
+  faceName = val # Update minimum confidence with the new value
+  log("faceName set to " + val)
 
 
-highScoreOwner = f.read("./highScorename.txt", "")
-faceName = None
 updateFacesList()
 prev_time: float = time.time()
-gameScores: Any = {}
-shouldSayNewHighScores: Any = {}
-spawnCount = 0.0
 while True:
-  if os.path.exists("updateGameUserList"):
-    os.remove("updateGameUserList")
-    updateFacesList()
   if not cap or not cap.isOpened():
     sendBlankFrame()
     continue
   curr_time = time.time()
   fps = 1 / (curr_time - prev_time)
-  delta = (curr_time - prev_time)
   prev_time = curr_time
   # Capture a frame from the camera
   ret, frame = cap.read()
   if not ret:
     log(frame, ret)
     continue
-  spawnCount += 0.1
   frame = cv2.flip(frame, 1) # Flip the frame for a mirror effect
   frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-  # rawframe_bgr = frame.copy()
-  # detect all faces in the *full* frame
-  # boxes: [[x1,y1,x2,y2], ...]
-  # probs: confidence per face
+  rawframe_bgr = frame.copy()
   facePos = None
-  height, width = frame.shape[:2]
   cv2.putText(
     frame,
     "FPS: " + toPlaces(fps, 2, 3),
@@ -449,55 +408,9 @@ while True:
     (255, 255, 255),
     2,
   )
-  eel.setHighscoreMessage(
-    "HIGH SCORE: " + comstr(highScore) + " by " + highScoreOwner,
-  )
-  deathPosRand.maxNum = width
-  # a = spawnNewDeathRand.next()
-  while spawnCount > 1:
-    spawnCount -= 1
-    randPos = int(deathPosRand.next())
-    diridx = int(round(dirRand.next()))
-    dir = [[0, 1], [0, -1], [1, 0], [-1, 0]][diridx]
-    deathBox = [
-      0,
-      0,
-      int(size),
-      int(size),
-      dir,
-      speed,
-    ]
-    if diridx == 0:
-      deathBox[1] = 0
-      deathBox[0] = randPos
-    elif diridx == 1:
-      deathBox[1] = height - size
-      deathBox[0] = randPos
-    elif diridx == 2:
-      deathBox[0] = 0
-      deathBox[1] = randPos
-    elif diridx == 3:
-      deathBox[0] = width - size
-      deathBox[1] = randPos
-    s = deathBox[4]
-    s[0] *= deathBox[5]
-    s[1] *= deathBox[5]
-    deathBoxList.append(deathBox)
-  for deathBox in deathBoxList:
-    s = deathBox[4]
-    deathBox[0] += s[0]
-    deathBox[1] += s[1]
 
   if mtcnn:
     boxes, probs = mtcnn.detect(frame_rgb)
-    for x, y, w, h, dir, speed in deathBoxList:
-      x = int(x)
-      y = int(y)
-      w = int(w)
-      h = int(h)
-      cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-      cv2.line(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-      cv2.line(frame, (x + w, y), (x, y + h), (0, 0, 255), 2)
     if boxes is not None:
       for box, prob in zip(boxes, probs):
         if prob is None:
@@ -529,24 +442,7 @@ while True:
           color = (0, 255, 0) # green
 
         facePos = [x1, y1, x2, y2]
-        # deathBoxList = [
-        #   *filter(lambda deathBox: deathBox[1] + deathBox[3] < height, deathBoxList)
-        # ]
-        collision = False
         if name:
-          for x, y, w, h, dir, speed in deathBoxList:
-            x = int(x)
-            y = int(y)
-            w = int(w)
-            h = int(h)
-            if collides(x, y, w, h, facePos):
-              gameScores[name] = 0
-              shouldSayNewHighScores[name] = True
-              collision = True
-          if not collision:
-            if name not in gameScores:
-              gameScores[name] = 0
-            gameScores[name] += (facePos[3] / 3) * delta
           cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
           cv2.putText(
             frame,
@@ -557,79 +453,45 @@ while True:
             color,
             2,
           )
-          cv2.putText(
-            frame,
-            str(int(gameScores[name])),
-            (x1, y1 - 30),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (150, 150, 150),
-            2,
-          )
-        for scorereName, gameScore in gameScores.items():
-          if int(gameScore) > highScore:
-            highScore = gameScore
-            if highScoreOwner:
-              if scorereName != highScoreOwner:
-                say(
-                  scorereName
-                  + " overtook "
-                  + highScoreOwner
-                  + " with a score of "
-                  + str(int(gameScore))
-                )
-              else:
-                if (
-                  scorereName in shouldSayNewHighScores
-                  and shouldSayNewHighScores[scorereName]
-                ):
-                  say(
-                    scorereName
-                    + " got a new high score of "
-                    + str(int(gameScore))
-                  )
-                  shouldSayNewHighScores[scorereName] = False
-            highScoreOwner = str(scorereName)
-            f.write("./highScore.txt", str(int(gameScore)))
-            f.write("./highScorename.txt", str(scorereName))
-        # if (
-        #   enableAutoCapture
-        #   and name
-        #   and score
-        #   and score < TARGET_CONFIDENCE
-        #   and score > MATCH_THRESHOLD
-        # ):
-        #   faceName = name
-        # cv2.putText(
-        #   frame,
-        #   label_text,
-        #   (x1, y1 - 10),
-        #   cv2.FONT_HERSHEY_SIMPLEX,
-        #   0.6,
-        #   color,
-        #   2,
-        # )
-  print(gameScores)
+        if (
+          (name or (faceName and not name))
+          and score
+          and score < TARGET_CONFIDENCE
+          and score > MATCH_THRESHOLD
+        ):
+          if not name:
+            name = faceName
+          i = 0
+          path = f"./enrolled/{name}/{i}.png"
+          os.makedirs(f"./enrolled/{name}", exist_ok=True)
+          while os.path.exists(path):
+            i += 1
+            path = f"./enrolled/{name}/{i}.png"
+          log("adding image for ", name, "idx: ", i)
+          if facePos:
+            frame_rgb_cropped = rawframe_bgr[
+              max(0, facePos[1] - 15) : min(
+                facePos[3] + 15, rawframe_bgr.shape[0]
+              ),
+              max(0, facePos[0] - 15) : min(
+                facePos[2] + 15, rawframe_bgr.shape[1]
+              ),
+            ]
+          else:
+            frame_rgb_cropped = rawframe_bgr
+
+          cv2.imwrite(
+            path, frame_rgb_cropped
+          ) # Save the current frame as an image
+          faceName = None
+          updateFacesList()
+        cv2.putText(
+          frame,
+          label_text,
+          (x1, y1 - 10),
+          cv2.FONT_HERSHEY_SIMPLEX,
+          0.6,
+          color,
+          2,
+        )
   send_frame(frame)
-  # if faceName:
-  #   i = 0
-  #   path = f"./enrolled/{faceName}/{i}.png"
-  #   os.makedirs(f"./enrolled/{faceName}", exist_ok=True)
-  #   while os.path.exists(path):
-  #     i += 1
-  #     path = f"./enrolled/{faceName}/{i}.png"
-  #   log("adding image for ", faceName, "idx: ", i)
-  #   if facePos:
-  #     frame_rgb_cropped = rawframe_bgr[
-  #       max(0, facePos[1] - 15) : min(facePos[3] + 15, rawframe_bgr.shape[0]),
-  #       max(0, facePos[0] - 15) : min(facePos[2] + 15, rawframe_bgr.shape[1]),
-  #     ]
-  #   else:
-  #     frame_rgb_cropped = rawframe_bgr
-
-  #   cv2.imwrite(path, frame_rgb_cropped) # Save the current frame as an image
-  #   faceName = None
-  #   updateFacesList()
-
-
-reset()

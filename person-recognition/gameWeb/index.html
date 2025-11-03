@@ -37,25 +37,16 @@
           window.progBar.remove()
           window.progBar = null
         }
-        function loadData({
-          captureIdx,
-          setminconfidenceInput,
-          gamecapidx,
-        }) {
+        function loadData({ captureIdx, setminconfidenceInput }) {
           a.qs("#captureIdx").value = captureIdx
-          a.qs("#gamecaptureIdx").value = gamecapidx
           a.qs("#setminconfidenceInput").value = setminconfidenceInput
         }
         window.toast = loadlib("toast")
         a.listen("#captureIdx", "change", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
         })
-        a.listen("#gamecaptureIdx", "change", function (e) {
-          eel.startCaptureGame(a.qs("#gamecaptureIdx").value)
-        })
         a.listen("#captureBtn", "click", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
-          eel.startCaptureGame(a.qs("#gamecaptureIdx").value)
         })
         a.listen("#stopCaptureBtn", "click", function (e) {
           eel.stopCapture()
@@ -127,7 +118,7 @@
       overflow: hidden;
       background-color: #111;
     }
-    #highscoreMessage{
+    #highscoreMessage {
       position: absolute;
       top: 10px;
       left: 30px;
@@ -147,13 +138,6 @@
             id="captureIdx"
             value="1"
           />
-          <label for="gamecaptureIdx">gamecapture Index:</label>
-          <input
-            type="number"
-            name="gamecaptureIdx"
-            id="gamecaptureIdx"
-            value="1"
-          />
           <button id="captureBtn">▶️ Start Capture</button>
           <button id="stopCaptureBtn">🟥 Stop Capture</button>
         </div>
@@ -166,9 +150,6 @@
             step="0.01"
             value="0.5"
           />
-        </div>
-        <div class="h">
-          <button id="quitAppBtn">Quit App</button>
         </div>
       </div>
       <div class="c">

@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html>
   <head>
-    <title>camera web ui</title>
+    <title>game add new user</title>
     <script type="text/javascript" src="/eel.js"></script>
     <script type="text/javascript" src="./libloader.js"></script>
     <script type="text/javascript" src="./allfuncs.js"></script>
@@ -66,14 +66,9 @@
         })
         a.listen("#captureBtn", "click", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
-          eel.updateFacesList()
         })
         a.listen("#stopCaptureBtn", "click", function (e) {
           eel.stopCapture()
-        })
-        a.listen("#quitAppBtn", "click", function (e) {
-          eel.quitApp()
-          window.close()
         })
         a.listen(
           "#setminconfidenceInput",
@@ -187,7 +182,6 @@
           />
         </div>
         <div class="h">
-          <button id="quitAppBtn">Quit App</button>
           <button id="updateFacesList">update faces list</button>
           <label for="faceName">face name:</label>
           <input
