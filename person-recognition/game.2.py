@@ -453,7 +453,6 @@ while True:
     "HIGH SCORE: " + comstr(highScore) + " by " + highScoreOwner,
   )
   deathPosRand.maxNum = width
-  # a = spawnNewDeathRand.next()
   while spawnCount > 1:
     spawnCount -= 1
     randPos = int(deathPosRand.next())
