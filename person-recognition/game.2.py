@@ -214,6 +214,7 @@ def requestUpdatedData():
 @eel.expose
 def startCapture(idx):
   global cap, capidx
+  stopCapture()
   idx = int(idx) # Convert the input index to an integer
   log(f"Attempting to start capture on camera index: {idx}")
   capidx = idx # Set the camera index to the global variable
@@ -486,17 +487,29 @@ while True:
     s = deathBox[4]
     deathBox[0] += s[0]
     deathBox[1] += s[1]
-
+    x, y, w, h, dir, speed = deathBox
+    x = int(x)
+    y = int(y)
+    w = int(w)
+    h = int(h)
+    cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    cv2.line(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
+    cv2.line(frame, (x + w, y), (x, y + h), (0, 0, 255), 2)
+  deathBoxList = [
+    deathBox
+    for deathBox in deathBoxList
+    if (
+      not (
+        deathBox[1] > height # down
+        or deathBox[1] + deathBox[2] < 0 # up
+        or deathBox[0] > width # right
+        or deathBox[0] + deathBox[3] < 0
+      )
+    )
+  ]
   if mtcnn:
     boxes, probs = mtcnn.detect(frame_rgb)
-    for x, y, w, h, dir, speed in deathBoxList:
-      x = int(x)
-      y = int(y)
-      w = int(w)
-      h = int(h)
-      cv2.rectangle(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-      cv2.line(frame, (x, y), (x + w, y + h), (0, 0, 255), 2)
-      cv2.line(frame, (x + w, y), (x, y + h), (0, 0, 255), 2)
+
     if boxes is not None:
       for box, prob in zip(boxes, probs):
         if prob is None:
@@ -528,9 +541,6 @@ while True:
           color = (0, 255, 0) # green
 
         facePos = [x1, y1, x2, y2]
-        # deathBoxList = [
-        #   *filter(lambda deathBox: deathBox[1] + deathBox[3] < height, deathBoxList)
-        # ]
         collision = False
         if name:
           for x, y, w, h, dir, speed in deathBoxList:
