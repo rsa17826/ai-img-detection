@@ -551,9 +551,23 @@ while True:
             w = int(w)
             h = int(h)
             if collides(x, y, w, h, facePos):
+              if (
+                (
+                  name not in shouldSayNewHighScores
+                  or not shouldSayNewHighScores[name]
+                )
+                and highScoreOwner == name
+                and highScore == gameScores[name]
+              ):
+                say(
+                  name
+                  + " just lost with a new highscore of "
+                  + str(int(highScore))
+                )
               gameScores[name] = 0
               shouldSayNewHighScores[name] = True
               collision = True
+              break
             elif collides(
               x - grazeSize,
               y - grazeSize,
