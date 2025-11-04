@@ -34,7 +34,7 @@
           window.progBar.set(prog, name)
         }
         function hideProg() {
-          window.progBar.remove()
+          if (window.progBar) window.progBar.remove()
           window.progBar = null
         }
         function loadData({ captureIdx, setminconfidenceInput }) {
@@ -101,7 +101,7 @@
       align-self: center;
     }
     #cameraFeed {
-      --size: calc(100vh - 140px);
+      --size: calc(100vh - 60px);
       height: var(--size);
       min-width: var(--size);
       max-width: calc(100vw - 20px);
@@ -140,8 +140,6 @@
           />
           <button id="captureBtn">▶️ Start Capture</button>
           <button id="stopCaptureBtn">🟥 Stop Capture</button>
-        </div>
-        <div class="h">
           <label for="setminconfidenceInput">Min Confidence:</label>
           <input
             type="number"

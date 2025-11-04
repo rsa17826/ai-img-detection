@@ -30,7 +30,7 @@
           window.progBar.set(prog, name)
         }
         function hideProg() {
-          window.progBar.remove()
+          if (window.progBar) window.progBar.remove()
           window.progBar = null
         }
         function loadData({
