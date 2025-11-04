@@ -10,12 +10,9 @@ import enroll_faces
 from facenet_pytorch import MTCNN, InceptionResnetV1 # type: ignore
 import numpy as np
 from pathlib import Path
-import pyttsx3
+import pyttsx3 # type: ignore
+
 engine = pyttsx3.init()
-
-# For Mac, If you face error related to "pyobjc" when running the `init()` method :
-# Install 9.0.1 version of pyobjc : "pip install pyobjc>=9.0.1"
-
 
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -415,6 +412,7 @@ def say(msg):
   log(msg)
   engine.say(msg)
   Thread(target=engine.runAndWait).start()
+
 
 highScoreOwner = f.read("./highScorename.txt", "")
 faceName = None
