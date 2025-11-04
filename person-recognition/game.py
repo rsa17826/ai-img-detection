@@ -542,6 +542,8 @@ while True:
 
         facePos = [x1, y1, x2, y2]
         collision = False
+        graze = 0
+        grazeSize = 5
         if name:
           for x, y, w, h, dir, speed in deathBoxList:
             x = int(x)
@@ -552,11 +554,40 @@ while True:
               gameScores[name] = 0
               shouldSayNewHighScores[name] = True
               collision = True
+            elif collides(
+              x - grazeSize,
+              y - grazeSize,
+              w + (grazeSize - 2),
+              h + (grazeSize * 2),
+              facePos,
+            ):
+              graze = 2
+            elif collides(
+              x - (grazeSize * 2),
+              y - (grazeSize * 2),
+              w + (grazeSize * 4),
+              h + (grazeSize * 4),
+              facePos,
+            ):
+              graze = 1
           if not collision:
             if name not in gameScores:
               gameScores[name] = 0
-            gameScores[name] += (facePos[3] / 3) * delta
-          cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
+            gameScores[name] += ((facePos[3] / 3) * delta) * (graze + 1)
+          color = (0, 255, 0)
+          if collision:
+            color = (0, 0, 255)
+          elif graze == 1:
+            color = (0, 192, 255)
+          elif graze == 2:
+            color = (0, 128, 255)
+          cv2.rectangle(
+            frame,
+            (x1, y1),
+            (x2, y2),
+            color,
+            2,
+          )
           cv2.putText(
             frame,
             name + ": " + toPlaces(score, 1, 2),
