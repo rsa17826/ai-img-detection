@@ -11,7 +11,7 @@ BLANK_IMAGE = (
 )
 
 # Initialize Eel, a Python library for creating simple Electron-like desktop apps
-eel.init("web")
+eel.init("../web")
 
 # Variable to hold the capture object; initially set to 0
 cap: Any = 0
@@ -138,7 +138,7 @@ Thread(
     mode=None, port=15674, close_callback=lambda *x: os._exit(0), shutdown_delay=10
   )
 ).start()
-os.system("start http://127.0.0.1:15674")
+os.system("start http://127.0.0.1:15674/object-detection.html")
 
 
 def sendPersonEntered(frame):

@@ -151,7 +151,7 @@ BLANK_IMAGE = (
 )
 
 # Initialize Eel, a Python library for creating simple Electron-like desktop apps
-eel.init("gameWeb")
+eel.init("../web")
 
 # Variable to hold the capture object; initially set to 0
 cap: Any = 0
@@ -289,7 +289,7 @@ Thread(
     mode=None, port=15674, close_callback=lambda *x: os._exit(0), shutdown_delay=10
   )
 ).start()
-os.system("start http://127.0.0.1:15674")
+os.system("start http://127.0.0.1:15674/gameWeb.html")
 
 
 # Function to format numbers into a specific format
@@ -542,7 +542,7 @@ while True:
 
         facePos = [x1, y1, x2, y2]
         collision = False
-        graze = 0
+        graze: float = 0
         grazeSize = 5
         if name:
           for x, y, w, h, dir, speed in deathBoxList:
