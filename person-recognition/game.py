@@ -583,7 +583,7 @@ while True:
               h + (grazeSize * 4),
               facePos,
             ):
-              graze = 1
+              graze = 0.3
           if not collision:
             if name not in gameScores:
               gameScores[name] = 0
@@ -591,7 +591,7 @@ while True:
           color = (0, 255, 0)
           if collision:
             color = (0, 0, 255)
-          elif graze == 1:
+          elif graze == 0.3:
             color = (0, 192, 255)
           elif graze == 2:
             color = (0, 128, 255)
@@ -611,15 +611,73 @@ while True:
             color,
             2,
           )
+          textSize = 0.6
+          hasHighScore = name == highScoreOwner
+          gettingHighScore = hasHighScore and gameScores[name] > highScore
+          textColor = (255, 255, 255)
+          if gettingHighScore or hasHighScore:
+            textSize = 0.8
+          if gettingHighScore:
+            textColor = (192, 0, 255)
+          elif hasHighScore:
+            textColor = (255, 192, 0)
+
+          # Draw border (black) in 4 directions
+          cv2.putText(
+            frame,
+            str(int(gameScores[name])),
+            (x1 - 1, y1 - 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            textSize,
+            (0, 0, 0),
+            4,
+            cv2.LINE_AA,
+          )
+          cv2.putText(
+            frame,
+            str(int(gameScores[name])),
+            (x1 + 1, y1 - 30),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            textSize,
+            (0, 0, 0),
+            4,
+            cv2.LINE_AA,
+          )
+          cv2.putText(
+            frame,
+            str(int(gameScores[name])),
+            (x1, y1 - 31),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            textSize,
+            (0, 0, 0),
+            4,
+            cv2.LINE_AA,
+          )
+          cv2.putText(
+            frame,
+            str(int(gameScores[name])),
+            (x1, y1 - 29),
+            cv2.FONT_HERSHEY_SIMPLEX,
+            textSize,
+            (0, 0, 0),
+            4,
+            cv2.LINE_AA,
+          )
+
+          # Draw main text on top
           cv2.putText(
             frame,
             str(int(gameScores[name])),
             (x1, y1 - 30),
             cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            (150, 150, 150),
+            textSize,
+            textColor,
             2,
+            cv2.LINE_AA,
           )
+          # if getting new high score set color else
+          # if has current high score set color else
+          # default color
         for scorereName, gameScore in gameScores.items():
           if int(gameScore) > highScore:
             highScore = gameScore
