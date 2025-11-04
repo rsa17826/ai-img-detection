@@ -451,7 +451,7 @@ while True:
     2,
   )
   eel.setHighscoreMessage( # type: ignore
-    "HIGH SCORE: " + comstr(highScore) + " by " + highScoreOwner,
+    "HIGH SCORE: " + comstr(int(highScore)) + " by " + highScoreOwner,
   )
   deathPosRand.maxNum = width
   while spawnCount > 1:
@@ -618,7 +618,7 @@ while True:
         #   color,
         #   2,
         # )
-  print(gameScores)
+  # print(gameScores)
   send_frame(frame)
   # if faceName:
   #   i = 0
