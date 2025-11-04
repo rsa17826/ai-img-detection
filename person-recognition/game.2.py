@@ -7,7 +7,7 @@ import eel
 from threading import Thread
 import os, base64
 import enroll_faces
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from facenet_pytorch import MTCNN, InceptionResnetV1 # type: ignore
 import numpy as np
 from pathlib import Path
 
@@ -424,7 +424,7 @@ while True:
     continue
   curr_time = time.time()
   fps = 1 / (curr_time - prev_time)
-  delta = (curr_time - prev_time)
+  delta = curr_time - prev_time
   prev_time = curr_time
   # Capture a frame from the camera
   ret, frame = cap.read()
@@ -449,7 +449,7 @@ while True:
     (255, 255, 255),
     2,
   )
-  eel.setHighscoreMessage(
+  eel.setHighscoreMessage( # type: ignore
     "HIGH SCORE: " + comstr(highScore) + " by " + highScoreOwner,
   )
   deathPosRand.maxNum = width
