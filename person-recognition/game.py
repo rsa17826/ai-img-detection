@@ -709,44 +709,4 @@ while True:
             highScoreOwner = str(scorereName)
             f.write("./highScore.txt", str(int(gameScore)))
             f.write("./highScorename.txt", str(scorereName))
-        # if (
-        #   enableAutoCapture
-        #   and name
-        #   and score
-        #   and score < TARGET_CONFIDENCE
-        #   and score > MATCH_THRESHOLD
-        # ):
-        #   faceName = name
-        # cv2.putText(
-        #   frame,
-        #   label_text,
-        #   (x1, y1 - 10),
-        #   cv2.FONT_HERSHEY_SIMPLEX,
-        #   0.6,
-        #   color,
-        #   2,
-        # )
-  # print(gameScores)
   send_frame(frame)
-  # if faceName:
-  #   i = 0
-  #   path = f"./enrolled/{faceName}/{i}.png"
-  #   os.makedirs(f"./enrolled/{faceName}", exist_ok=True)
-  #   while os.path.exists(path):
-  #     i += 1
-  #     path = f"./enrolled/{faceName}/{i}.png"
-  #   log("adding image for ", faceName, "idx: ", i)
-  #   if facePos:
-  #     frame_rgb_cropped = rawframe_bgr[
-  #       max(0, facePos[1] - 15) : min(facePos[3] + 15, rawframe_bgr.shape[0]),
-  #       max(0, facePos[0] - 15) : min(facePos[2] + 15, rawframe_bgr.shape[1]),
-  #     ]
-  #   else:
-  #     frame_rgb_cropped = rawframe_bgr
-
-  #   cv2.imwrite(path, frame_rgb_cropped) # Save the current frame as an image
-  #   faceName = None
-  #   updateFacesList()
-
-
-reset()
