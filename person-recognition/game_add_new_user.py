@@ -7,7 +7,7 @@ import eel
 from threading import Thread
 import os, base64
 import enroll_faces
-from facenet_pytorch import MTCNN, InceptionResnetV1
+from facenet_pytorch import MTCNN, InceptionResnetV1 # type: ignore
 import numpy as np
 from pathlib import Path
 
@@ -165,6 +165,7 @@ saveFrame = False
 # Index of the camera to use
 capidx = 1
 
+
 # Log messages to the console and the front end
 def log(*msgs):
   print(*msgs)
@@ -185,6 +186,7 @@ def stopCapture():
 def jsSaveFrame():
   global saveFrame
   saveFrame = True # Set the flag to save the frame
+
 
 # Expose function to request updated settings/data to be sent to JavaScript
 @eel.expose
@@ -382,7 +384,7 @@ while True:
   curr_time = time.time()
   fps = 1 / max(curr_time - prev_time, 0.0001)
   prev_time = curr_time
-  # Capture a frame from the camera
+  # region Capture a frame from the camera
   ret, frame = cap.read()
   if not ret:
     log(frame, ret)
@@ -400,7 +402,7 @@ while True:
     (255, 255, 255),
     2,
   )
-
+  # endregion
   if mtcnn:
     foundUnknownFace = False
     boxes, probs = mtcnn.detect(frame_rgb)
@@ -426,6 +428,7 @@ while True:
           log(e)
           continue
         # endregion
+        # region draw face box and name
         label_text = "Unknown"
         color = (0, 0, 255) # red in BGR
         if name is not None:
@@ -445,6 +448,7 @@ while True:
           color,
           2,
         )
+        # endregion
         # region capture face
         if (
           name
@@ -482,7 +486,6 @@ while True:
         # endregion
         if foundUnknownFace:
           break
-
         cv2.putText(
           frame,
           label_text,
