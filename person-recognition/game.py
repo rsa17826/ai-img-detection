@@ -15,7 +15,6 @@ import pyttsx3 # type: ignore
 
 # endregion
 # region start
-engine = pyttsx3.init()
 
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -412,9 +411,13 @@ def comstr(item: Any) -> str:
 
 
 def say(msg):
-  log(msg)
-  engine.say(msg)
-  Thread(target=engine.runAndWait).start()
+  def _say():
+    engine = pyttsx3.init() # Create engine inside the thread
+    engine.say(msg)
+    engine.runAndWait()
+    engine.stop() # Clean up
+
+  Thread(target=_say).start()
 
 
 # endregion
@@ -426,6 +429,7 @@ prev_time: float = time.time()
 gameScores: Any = {}
 shouldSayNewHighScores: Any = {}
 spawnCount = 0.0
+lastActiveTimes: Any = {}
 while True:
   if os.path.exists("updateGameUserList"):
     os.remove("updateGameUserList")
@@ -522,7 +526,6 @@ while True:
     # region get all faces
     boxes, probs = mtcnn.detect(frame_rgb)
     # endregion
-
     if boxes is not None:
       for box, prob in zip(boxes, probs):
         # region what face is that
@@ -546,6 +549,9 @@ while True:
           continue
         # endregion
         if name:
+          if lastActiveTimes and name not in lastActiveTimes:
+            say(name + " just started the game")
+          lastActiveTimes[name] = curr_time
           label_text = f"{name} ({score:.2f})"
           color = (0, 255, 0) # green
           facePos = [x1, y1, x2, y2]
@@ -627,7 +633,7 @@ while True:
           # region render score text
           textSize = 0.6
           hasHighScore = name == highScoreOwner
-          gettingHighScore = hasHighScore and gameScores[name] > highScore
+          gettingHighScore = hasHighScore and gameScores[name] >= highScore
           textColor = (255, 255, 255)
           if gettingHighScore or hasHighScore:
             textSize = 0.8
@@ -717,4 +723,9 @@ while True:
             f.write("./highScore.txt", str(int(gameScore)))
             f.write("./highScorename.txt", str(scorereName))
         # endregion
+  for name, t in lastActiveTimes.copy().items():
+    if curr_time - t > 1:
+      del lastActiveTimes[name]
+      say(name + " has left the game")
+
   send_frame(frame)
