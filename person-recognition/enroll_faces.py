@@ -12,7 +12,7 @@ def init(log, setProg=lambda *a: 1):
 
   # 1. Load face detector + embedder
   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
-  mtcnn = MTCNN(image_size=160, margin=20, keep_all=False, device=device)
+  mtcnn = MTCNN(image_size=160, margin=0, keep_all=False, device=device)
   resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
 
   all_embeddings: Any = []
