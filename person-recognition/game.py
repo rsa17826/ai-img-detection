@@ -12,6 +12,7 @@ import numpy as np
 from pathlib import Path
 import pyttsx3 # type: ignore
 
+#region start
 engine = pyttsx3.init()
 
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
@@ -413,6 +414,7 @@ def say(msg):
   engine.say(msg)
   Thread(target=engine.runAndWait).start()
 
+#endregion
 
 highScoreOwner = f.read("./highScorename.txt", "")
 faceName = None
@@ -429,7 +431,7 @@ while True:
     sendBlankFrame()
     continue
   curr_time = time.time()
-  fps = 1 / (curr_time - prev_time)
+  fps = 1 / max(curr_time - prev_time, 0.0001)
   delta = curr_time - prev_time
   prev_time = curr_time
   # Capture a frame from the camera
@@ -437,13 +439,10 @@ while True:
   if not ret:
     log(frame, ret)
     continue
-  spawnCount += 0.1
+  #region grab frame
   frame = cv2.flip(frame, 1) # Flip the frame for a mirror effect
   frame_rgb = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
-  # rawframe_bgr = frame.copy()
-  # detect all faces in the *full* frame
-  # boxes: [[x1,y1,x2,y2], ...]
-  # probs: confidence per face
+  #endregion
   facePos = None
   height, width = frame.shape[:2]
   cv2.putText(
@@ -458,7 +457,9 @@ while True:
   eel.setHighscoreMessage( # type: ignore
     "HIGH SCORE: " + comstr(int(highScore)) + " by " + highScoreOwner,
   )
+  #region spawn boxes
   deathPosRand.maxNum = width
+  spawnCount += 0.1
   while spawnCount > 1:
     spawnCount -= 1
     randPos = int(deathPosRand.next())
@@ -512,6 +513,7 @@ while True:
       )
     )
   ]
+  #endregion
   if mtcnn:
     boxes, probs = mtcnn.detect(frame_rgb)
 
@@ -549,7 +551,9 @@ while True:
         collision = False
         graze: float = 0
         grazeSize = 5
+
         if name:
+          #region check collisions
           for x, y, w, h, dir, speed in deathBoxList:
             x = int(x)
             y = int(y)
@@ -589,10 +593,14 @@ while True:
               facePos,
             ):
               graze = 0.3
+          #endregion
+          #region calc new score
           if not collision:
             if name not in gameScores:
               gameScores[name] = 0
             gameScores[name] += ((facePos[3] / 3) * delta) * (graze + 1)
+          #endregion
+          #region draw face box
           color = (0, 255, 0)
           if collision:
             color = (0, 0, 255)
@@ -616,6 +624,8 @@ while True:
             color,
             2,
           )
+          #endregion
+          #region render score text
           textSize = 0.6
           hasHighScore = name == highScoreOwner
           gettingHighScore = hasHighScore and gameScores[name] > highScore
@@ -626,7 +636,6 @@ while True:
             textColor = (192, 0, 255)
           elif hasHighScore:
             textColor = (255, 192, 0)
-
           # Draw border (black) in 4 directions
           cv2.putText(
             frame,
@@ -680,9 +689,8 @@ while True:
             2,
             cv2.LINE_AA,
           )
-          # if getting new high score set color else
-          # if has current high score set color else
-          # default color
+          #endregion
+        #region update scores and highscores
         for scorereName, gameScore in gameScores.items():
           if int(gameScore) > highScore:
             highScore = gameScore
@@ -709,4 +717,5 @@ while True:
             highScoreOwner = str(scorereName)
             f.write("./highScore.txt", str(int(gameScore)))
             f.write("./highScorename.txt", str(scorereName))
+        #endregion
   send_frame(frame)

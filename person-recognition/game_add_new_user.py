@@ -11,6 +11,7 @@ from facenet_pytorch import MTCNN, InceptionResnetV1
 import numpy as np
 from pathlib import Path
 
+# region start
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 
@@ -382,6 +383,8 @@ def addFaceToList(val):
   log("faceName set to " + val)
 
 
+# endregion
+
 updateFacesList()
 prev_time: float = time.time()
 while True:
@@ -389,7 +392,7 @@ while True:
     sendBlankFrame()
     continue
   curr_time = time.time()
-  fps = 1 / (curr_time - prev_time)
+  fps = 1 / max(curr_time - prev_time, 0.0001)
   prev_time = curr_time
   # Capture a frame from the camera
   ret, frame = cap.read()
