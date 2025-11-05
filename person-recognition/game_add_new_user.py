@@ -165,10 +165,6 @@ saveFrame = False
 # Index of the camera to use
 capidx = 1
 
-# Set the minimum confidence level for object detection
-minconfidence = 0.5
-
-
 # Log messages to the console and the front end
 def log(*msgs):
   print(*msgs)
@@ -190,15 +186,6 @@ def jsSaveFrame():
   global saveFrame
   saveFrame = True # Set the flag to save the frame
 
-
-# Expose JavaScript function to set minimum confidence level for detection
-@eel.expose
-def jsSetminconfidence(val):
-  global minconfidence
-  minconfidence = float(val) # Update minimum confidence with the new value
-  log("minconfidence set to " + str(val))
-
-
 # Expose function to request updated settings/data to be sent to JavaScript
 @eel.expose
 def requestUpdatedData():
@@ -206,7 +193,6 @@ def requestUpdatedData():
   eel.loadData(
     {
       "captureIdx": capidx,
-      "setminconfidenceInput": minconfidence,
     }
   )
 
