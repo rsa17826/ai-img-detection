@@ -39,23 +39,23 @@
           TARGET_CONFIDENCE,
           enableAutoCapture,
         }) {
-          a.qs("#captureIdx").value = captureIdx
-          a.qs("#setminconfidenceInput").value = setminconfidenceInput
-          a.qs("#TARGET_CONFIDENCE").value = TARGET_CONFIDENCE
-          a.qs("#enableAutoCapture").value = enableAutoCapture
-          eel.updateFacesList()
+          // a.qs("#captureIdx").value = captureIdx
+          // a.qs("#setminconfidenceInput").value = setminconfidenceInput
+          // a.qs("#TARGET_CONFIDENCE").value = TARGET_CONFIDENCE
+          // a.qs("#enableAutoCapture").value = enableAutoCapture
+          // eel.updateFacesList()
         }
         window.toast = loadlib("toast")
         a.listen("#captureIdx", "change", function (e) {
           eel.startCapture(a.qs("#captureIdx").value)
           eel.updateFacesList()
         })
-        a.listen("#enableAutoCapture", "change", function (e) {
-          eel.setenableAutoCapture(a.qs("#enableAutoCapture").checked)
-        })
-        a.listen("#TARGET_CONFIDENCE", "change", function (e) {
-          eel.setTARGET_THRESH(a.qs("#TARGET_CONFIDENCE").value)
-        })
+        // a.listen("#enableAutoCapture", "change", function (e) {
+        //   eel.setenableAutoCapture(a.qs("#enableAutoCapture").checked)
+        // })
+        // a.listen("#TARGET_CONFIDENCE", "change", function (e) {
+        //   eel.setTARGET_THRESH(a.qs("#TARGET_CONFIDENCE").value)
+        // })
         a.listen("#updateFacesList", "click", function (e) {
           eel.updateFacesList()
         })
@@ -117,7 +117,7 @@
       align-self: center;
     }
     #cameraFeed {
-      --size: calc(100vh - 140px);
+      --size: calc(100vh - 100px);
       height: var(--size);
       min-width: var(--size);
       max-width: calc(100vw - 20px);
@@ -134,8 +134,41 @@
       overflow: hidden;
       background-color: #111;
     }
+    #imp {
+      position: absolute;
+      top: 40px;
+      left: 30px;
+      font-weight: bolder;
+      color: rgb(226, 0, 0);
+      text-shadow: 1px 1px 1px rgba(205, 0, 0, 0.471);
+      z-index: 9999999999;
+    }
+    #imp > *,
+    #imp > * > *,
+    #imp > * > * > * {
+      font-weight: bolder;
+      color: rgb(226, 0, 0);
+      text-shadow: 0px 0px 4px rgb(0, 0, 0);
+      z-index: 9999999999;
+      padding: none;
+      margin: none;
+      gap: none;
+    }
   </style>
   <body>
+    <div id="imp">
+      <h2>
+        IMPORTANT!!!<br />after entering your name press "add face to
+        list"
+        <br />
+        (ONLY PRESS THIS IF YOU ARE THE PERSON THAT HAS THEIR FACE
+        SELECTED BY THE RED BOX!)
+        <br />then move after it loads move around and it will auto
+        capture more images if required<br />move to different
+        positions until you have a consistently high accuracy as shown
+        bu they green number beside your name
+      </h2>
+    </div>
     <div class="v">
       <div class="v c">
         <div class="h">
@@ -150,7 +183,7 @@
           <button id="captureBtn">▶️ Start Capture</button>
           <button id="stopCaptureBtn">🟥 Stop Capture</button>
         </div>
-        <div class="h">
+        <!-- <div class="h">
           <label for="setminconfidenceInput">Min Confidence:</label>
           <input
             title="min Confidence for any detections"
@@ -179,17 +212,17 @@
             type="checkbox"
             name="enableAutoCapture"
             id="enableAutoCapture"
-          />
-        </div>
+          /> -->
+        <!-- </div> -->
         <div class="h">
           <button id="updateFacesList">update faces list</button>
-          <label for="faceName">face name:</label>
+          <!-- <label for="faceName">face name:</label>
           <input
             title="name of the face that is being captured when add face to list gets pressed"
             type="text"
             name="faceName"
             id="faceName"
-          />
+          /> -->
           <button id="addFaceToList">add face to list</button>
         </div>
       </div>

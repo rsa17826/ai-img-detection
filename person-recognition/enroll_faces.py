@@ -18,18 +18,28 @@ def init(log, setProg=lambda *a: 1):
   all_embeddings: Any = []
   all_labels: Any = []
   prog = 0
-  maxProg = len(os.listdir(ENROLL_DIR))
+  maxProg = 0
+
   for person_name in os.listdir(ENROLL_DIR):
     person_folder = os.path.join(ENROLL_DIR, person_name)
-    prog += 1
-    setProg(prog, maxProg, person_name)
     if not os.path.isdir(person_folder):
       continue
 
-    log(f"[INFO] Processing {person_name}")
-    for img_file in os.listdir(person_folder):
-      img_path = os.path.join(person_folder, img_file)
+    innerList = os.listdir(person_folder)
+    maxProg += len(innerList)
 
+  for person_name in os.listdir(ENROLL_DIR):
+    person_folder = os.path.join(ENROLL_DIR, person_name)
+    if not os.path.isdir(person_folder):
+      continue
+
+    # log(f"[INFO] Processing {person_name}")
+    innerList = os.listdir(person_folder)
+
+    for img_file in innerList:
+      img_path = os.path.join(person_folder, img_file)
+      prog += 1
+      setProg(prog, maxProg, person_name)
       # read image with cv2 (BGR -> RGB)
       img_bgr = cv2.imread(img_path)
       if img_bgr is None:
@@ -56,12 +66,12 @@ def init(log, setProg=lambda *a: 1):
       all_labels.append(person_name)
 
   # convert to arrays
-  all_embeddings = np.array(all_embeddings)
-  all_labels = np.array(all_labels)
+  all_embeddings = np.array(all_embeddings) if all_embeddings else np.empty((0, 512))
+  all_labels = np.array(all_labels) if all_labels else np.empty((0,))
 
-  # log(f"[INFO] Total faces enrolled: {len(all_labels)}")
-
+  # Ensure the 'data' directory exists
   os.makedirs("data", exist_ok=True)
   np.savez(DB_PATH, embeddings=all_embeddings, labels=all_labels)
 
+  # log(f'[INFO] Total faces enrolled: {len(all_labels)}')
   # log(f"[INFO] Saved database to {DB_PATH}")

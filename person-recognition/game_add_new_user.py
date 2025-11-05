@@ -258,6 +258,8 @@ def match_identity(embedding_vec):
   cand = embedding_vec / (np.linalg.norm(embedding_vec) + 1e-10)
   # cosine sim = dot product since both normalized
   sims = known_norm.dot(cand) # shape (N,)
+  if not sims.size:
+    return None, None
   best_idx = np.argmax(sims)
   best_score = sims[best_idx]
   best_name = known_labels[best_idx]
@@ -384,7 +386,7 @@ def addFaceToList(val):
 
 
 # endregion
-
+faceName = None
 updateFacesList()
 prev_time: float = time.time()
 while True:
@@ -414,18 +416,17 @@ while True:
   )
 
   if mtcnn:
+    foundUnknownFace = False
     boxes, probs = mtcnn.detect(frame_rgb)
     if boxes is not None:
       for box, prob in zip(boxes, probs):
+        # region what face is that
         if prob is None:
           continue
         x1, y1, x2, y2 = [int(v) for v in box]
-
-        # crop face region
         face_crop_rgb = frame_rgb[y1:y2, x1:x2]
         if face_crop_rgb.size == 0:
           continue
-
         emb = None
         try:
           emb = get_embedding(face_crop_rgb)
@@ -433,36 +434,39 @@ while True:
           continue
         if emb is None:
           continue
-
         try:
           name, score = match_identity(emb)
         except Exception as e:
           log(e)
           continue
+        # endregion
         label_text = "Unknown"
         color = (0, 0, 255) # red in BGR
         if name is not None:
           label_text = f"{name} ({score:.2f})"
           color = (0, 255, 0) # green
-
+        else:
+          foundUnknownFace = True
         facePos = [x1, y1, x2, y2]
-        if name:
-          cv2.rectangle(frame, (x1, y1), (x2, y2), (0, 255, 0), 2)
-          cv2.putText(
-            frame,
-            name + ": " + toPlaces(score, 1, 2),
-            (x1, y1 - 10),
-            cv2.FONT_HERSHEY_SIMPLEX,
-            0.6,
-            color,
-            2,
-          )
+        # if name:
+        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+        cv2.putText(
+          frame,
+          name + ": " + toPlaces(score, 1, 2) if name else "Unknown",
+          (x1, y1 - 10),
+          cv2.FONT_HERSHEY_SIMPLEX,
+          0.6,
+          color,
+          2,
+        )
+        # region capture face
         if (
-          (name or (faceName and not name))
+          name
           and score
           and score < TARGET_CONFIDENCE
           and score > MATCH_THRESHOLD
-        ):
+        ) or (faceName and foundUnknownFace and not name):
+          send_frame(frame)
           if not name:
             name = faceName
           i = 0
@@ -489,6 +493,10 @@ while True:
           ) # Save the current frame as an image
           faceName = None
           updateFacesList()
+        # endregion
+        if foundUnknownFace:
+          break
+
         cv2.putText(
           frame,
           label_text,

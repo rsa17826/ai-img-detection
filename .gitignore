@@ -15,6 +15,7 @@
 **/pipeline.config
 **/data
 **/enrolled
+**/*enrolled*
 **/enrolled/*
 **/enrolled/**
 **/frames/**
@@ -26,3 +27,4 @@ frame
 outFrames
 outFramesStep2
 **/log.txt
+updateGameUserList
