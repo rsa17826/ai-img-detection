@@ -390,10 +390,12 @@ def updateFacesList():
   try:
     # enroll_faces.init(log, eel.setProg)
     log("started loading new file")
+    if not os.path.exists(DB_PATH):
+      os.rename(DB_PATH + ".backup", DB_PATH)
     with tempfile.NamedTemporaryFile(delete=False) as temp_db:
       log(temp_db.name)
       f.write(temp_db.name, f.read(DB_PATH, "", True), True)
-      os.remove(DB_PATH)
+      os.rename(DB_PATH, DB_PATH + ".backup")
       db = np.load(temp_db.name) # Load from the temporary location
 
     known_embeddings = db["embeddings"] # shape (N,512)
@@ -447,9 +449,12 @@ shouldSayNewHighScores: Any = {}
 spawnCount = 0.0
 lastActiveTimes: Any = {}
 while True:
-  if os.path.exists("enrolled/updateGameUserList"):
+  if os.path.exists("data/embeddings_db.npz"):
     try:
       os.remove("enrolled/updateGameUserList")
+    except Exception as e:
+      log(e)
+    try:
       updateFacesList()
     except Exception as e:
       log(e)
