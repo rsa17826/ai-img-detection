@@ -515,12 +515,12 @@ while True:
           print(avgs[name].getAverage(), name)
         if foundUnknownFace:
           break
-        if avgs[name].count < 30:
+        if avgs[name].count < 10:
           color = (0, 0, 255)
           label_text += (
             " move your face around and show different angles "
             + str(avgs[name].count)
-            + "/30"
+            + "/10"
           )
         elif avgs[name].getAverage() < 0.8:
           color = (0, 0, 255)
