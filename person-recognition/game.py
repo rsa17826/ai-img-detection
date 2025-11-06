@@ -382,17 +382,17 @@ def collides(x, y, w, h, face):
   return not (x >= x2 + w2 or x + w <= x2 or y >= y2 + h2 or y + h <= y2)
 
 
+import tempfile
+
+
 def updateFacesList():
-  global mtcnn, known_norm, resnet, device, db, known_embeddings, known_labels
+  global mtcnn, known_norm, resnet, device, known_embeddings, known_labels
   try:
     # enroll_faces.init(log, eel.setProg)
-    if db is not None:
-      db = None # Reset the variable to free memory
+    with tempfile.NamedTemporaryFile(delete=False) as temp_db:
+      os.rename(DB_PATH, temp_db.name) # Rename original to temp
+      db = np.load(temp_db.name) # Load from the temporary location
 
-    # Rename the database file
-    os.rename(DB_PATH, DB_PATH + "_")
-
-    db = np.load(DB_PATH + "_")
     known_embeddings = db["embeddings"] # shape (N,512)
     known_labels = db["labels"] # shape (N,)
     # load models
