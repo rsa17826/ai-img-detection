@@ -410,21 +410,16 @@ def comstr(item: Any) -> str:
   return re.sub(reg[0], reg[1], str(item))
 
 
-engine = pyttsx3.init()
-
-
 def say(msg):
   def _say():
-    # pythoncom.CoInitialize()
     eel.sleep(0.1)
-    if engine._inLoop:
-      engine.endLoop()
+    engine = pyttsx3.init() # Initialize inside the thread
     engine.say(msg)
-    engine.runAndWait()
+    engine.runAndWait() # Blocks until speech finishes
+    engine.stop() # Clean up
     eel.sleep(0.1)
-    engine.stop()
 
-  log(msg)
+  print(msg)
   Thread(target=_say).start()
 
 
