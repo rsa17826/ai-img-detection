@@ -551,7 +551,7 @@ while True:
           continue
         # endregion
         if name:
-          if lastActiveTimes and name not in lastActiveTimes:
+          if name not in lastActiveTimes:
             say(name + " just started the game")
           lastActiveTimes[name] = curr_time
           label_text = f"{name} ({score:.2f})"
