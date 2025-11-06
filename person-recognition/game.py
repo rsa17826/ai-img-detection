@@ -390,7 +390,7 @@ def updateFacesList():
   try:
     # enroll_faces.init(log, eel.setProg)
     with tempfile.NamedTemporaryFile(delete=False) as temp_db:
-      os.rename(DB_PATH, temp_db.name) # Rename original to temp
+      f.write(temp_db.name, f.read(DB_PATH, "", True), True)
       db = np.load(temp_db.name) # Load from the temporary location
 
     known_embeddings = db["embeddings"] # shape (N,512)
