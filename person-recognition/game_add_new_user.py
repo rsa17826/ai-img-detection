@@ -384,7 +384,6 @@ def updateFacesList():
   except Exception as e:
     log(e)
   eel.hideProg()
-  f.write("./enrolled/updateGameUserList", "")
 
 
 def comstr(item: Any) -> str:

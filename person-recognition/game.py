@@ -390,7 +390,7 @@ def updateFacesList():
   try:
     # enroll_faces.init(log, eel.setProg)
     log("started loading new file")
-    if not os.path.exists(DB_PATH):
+    if not os.path.exists(DB_PATH) and os.path.exists(DB_PATH + ".backup"):
       os.rename(DB_PATH + ".backup", DB_PATH)
     with tempfile.NamedTemporaryFile(delete=False) as temp_db:
       log(temp_db.name)
@@ -452,10 +452,6 @@ spawnCount = 0.0
 lastActiveTimes: Any = {}
 while True:
   if os.path.exists("data/embeddings_db.npz"):
-    try:
-      os.remove("enrolled/updateGameUserList")
-    except Exception as e:
-      log(e)
     try:
       updateFacesList()
     except Exception as e:
