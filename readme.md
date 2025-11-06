@@ -1,5 +1,3 @@
-## user setup
-
 # River's AI Image Detection Project
 
 This project emerged from my work as a Laboratory Assistant in the Computer Science department's work-study program, where I explored the practical applications of artificial intelligence in computer vision. By combining cutting-edge technologies like TensorFlow and OpenCV with Python programming, I developed an interactive platform that demonstrates the potential of AI vision systems in real-world applications. The project not only served as a valuable learning experience but also provides a foundation for future students to understand and experiment with computer vision technologies in an engaging, hands-on manner.
