@@ -393,6 +393,7 @@ def updateFacesList():
     with tempfile.NamedTemporaryFile(delete=False) as temp_db:
       log(temp_db.name)
       f.write(temp_db.name, f.read(DB_PATH, "", True), True)
+      os.remove(DB_PATH)
       db = np.load(temp_db.name) # Load from the temporary location
 
     known_embeddings = db["embeddings"] # shape (N,512)
