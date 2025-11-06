@@ -10,6 +10,7 @@ def init(log, setProg=lambda *a: 1):
   ENROLL_DIR = "enrolled"
   DB_PATH = "data/embeddings_db.npz"
 
+  os.makedirs("enrolled", exist_ok=True)
   # 1. Load face detector + embedder
   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   mtcnn = MTCNN(image_size=160, margin=0, keep_all=False, device=device)

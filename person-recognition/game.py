@@ -419,7 +419,7 @@ def say(msg):
     engine.say(msg)
     engine.runAndWait()
     engine.stop()
-
+  log(msg)
   Thread(target=_say).start()
 
 # endregion

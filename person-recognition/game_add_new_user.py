@@ -10,6 +10,38 @@ import enroll_faces
 from facenet_pytorch import MTCNN, InceptionResnetV1 # type: ignore
 import numpy as np
 from pathlib import Path
+import time
+from collections import deque
+from typing import Dict
+
+
+class DecayingAverage:
+  def __init__(self):
+    self.values = deque() # Store values as (timestamp, value) pairs
+    self.total = 0 # Sum of values for average calculation
+    self.count = 0 # Number of active values
+
+  def registerValue(self, value):
+    current_time = time.time()
+    self.values.append((current_time, value)) # Register the current time and value
+    self.total += value
+    self.count += 1
+
+  def decayValues(self):
+    current_time = time.time()
+    while self.values and (
+      current_time - self.values[0][0] > 10
+    ): # Check for decay
+      old_time, old_value = self.values.popleft()
+      self.total -= old_value
+      self.count -= 1
+
+  def getAverage(self):
+    self.decayValues() # Clean up old values before calculating average
+    if self.count == 0:
+      return 0 # Return 0 if there are no values to average
+    return self.total / self.count
+
 
 # region start
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
@@ -375,6 +407,7 @@ def addFaceToList(val):
 
 # endregion
 faceName = None
+avgs: Dict[str, DecayingAverage] = {}
 updateFacesList()
 prev_time: float = time.time()
 while True:
@@ -484,15 +517,75 @@ while True:
           faceName = None
           updateFacesList()
         # endregion
+        if score and name:
+          if name not in avgs:
+            avgs[name] = DecayingAverage()
+          avgs[name].registerValue(score)
+          print(avgs[name].getAverage(), name)
         if foundUnknownFace:
           break
+        if avgs[name].count < 15:
+          color = (0, 0, 255)
+          label_text += (
+            " wait a while to get enough data "
+            + str(avgs[name].count)
+            + "/15"
+          )
+        if avgs[name].getAverage() < 0.8:
+          color = (0, 0, 255)
+          label_text += " get avg > .8 current " + str(
+            avgs[name].getAverage()
+          )
+        textSize = 0.6
         cv2.putText(
           frame,
           label_text,
-          (x1, y1 - 10),
+          (x1 - 1, y1 - 30),
           cv2.FONT_HERSHEY_SIMPLEX,
-          0.6,
+          textSize,
+          (0, 0, 0),
+          4,
+          cv2.LINE_AA,
+        )
+        cv2.putText(
+          frame,
+          label_text,
+          (x1 + 1, y1 - 30),
+          cv2.FONT_HERSHEY_SIMPLEX,
+          textSize,
+          (0, 0, 0),
+          4,
+          cv2.LINE_AA,
+        )
+        cv2.putText(
+          frame,
+          label_text,
+          (x1, y1 - 31),
+          cv2.FONT_HERSHEY_SIMPLEX,
+          textSize,
+          (0, 0, 0),
+          4,
+          cv2.LINE_AA,
+        )
+        cv2.putText(
+          frame,
+          label_text,
+          (x1, y1 - 29),
+          cv2.FONT_HERSHEY_SIMPLEX,
+          textSize,
+          (0, 0, 0),
+          4,
+          cv2.LINE_AA,
+        )
+
+        cv2.putText(
+          frame,
+          label_text,
+          (x1, y1 - 30),
+          cv2.FONT_HERSHEY_SIMPLEX,
+          textSize,
           color,
           2,
+          cv2.LINE_AA,
         )
   send_frame(frame)
