@@ -395,6 +395,8 @@ def updateFacesList():
     with tempfile.NamedTemporaryFile(delete=False) as temp_db:
       log(temp_db.name)
       f.write(temp_db.name, f.read(DB_PATH, "", True), True)
+      if os.path.exists(DB_PATH + ".backup"):
+        os.remove(DB_PATH + ".backup")
       os.rename(DB_PATH, DB_PATH + ".backup")
       db = np.load(temp_db.name) # Load from the temporary location
 
