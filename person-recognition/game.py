@@ -434,8 +434,11 @@ spawnCount = 0.0
 lastActiveTimes: Any = {}
 while True:
   if os.path.exists("updateGameUserList"):
-    os.remove("updateGameUserList")
-    updateFacesList()
+    try:
+      os.remove("updateGameUserList")
+      updateFacesList()
+    except Exception as e:
+      log(e)
   if not cap or not cap.isOpened():
     sendBlankFrame()
     continue
