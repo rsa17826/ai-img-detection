@@ -409,19 +409,18 @@ def comstr(item: Any) -> str:
     )
   return re.sub(reg[0], reg[1], str(item))
 
+engine = pyttsx3.init()
 
 def say(msg):
   def _say():
-    eel.sleep(0.1)
-    engine = pyttsx3.init() # Initialize inside the thread
+    # pythoncom.CoInitialize()
+    if engine._inLoop:
+      engine.endLoop()
     engine.say(msg)
-    engine.runAndWait() # Blocks until speech finishes
-    engine.stop() # Clean up
-    eel.sleep(0.1)
-
-  print(msg)
+    engine.runAndWait()
+    engine.stop()
+  log(msg)
   Thread(target=_say).start()
-
 
 # endregion
 
@@ -732,6 +731,9 @@ while True:
   for name, t in lastActiveTimes.copy().items():
     if curr_time - t > 1:
       del lastActiveTimes[name]
-      say(name + " has left the game")
+      say(
+        name
+        + " has left the game"
+      )
 
   send_frame(frame)
