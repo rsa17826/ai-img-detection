@@ -465,22 +465,13 @@ while True:
         label_text = "Unknown"
         color = (0, 0, 255) # red in BGR
         if name is not None:
-          label_text = f"{name} ({score:.2f})"
+          label_text = f"{name}:"
           color = (0, 255, 0) # green
         else:
           foundUnknownFace = True
         facePos = [x1, y1, x2, y2]
         # if name:
         cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
-        cv2.putText(
-          frame,
-          name + ": " + toPlaces(score, 1, 2) if name else "Unknown",
-          (x1, y1 - 10),
-          cv2.FONT_HERSHEY_SIMPLEX,
-          0.6,
-          color,
-          2,
-        )
         # endregion
         # region capture face
         if (
@@ -524,23 +515,30 @@ while True:
           print(avgs[name].getAverage(), name)
         if foundUnknownFace:
           break
-        if avgs[name].count < 15:
+        if avgs[name].count < 30:
           color = (0, 0, 255)
           label_text += (
-            " wait a while to get enough data "
+            " move your face around and show different angles "
             + str(avgs[name].count)
-            + "/15"
+            + "/30"
           )
-        if avgs[name].getAverage() < 0.8:
+        elif avgs[name].getAverage() < 0.8:
           color = (0, 0, 255)
-          label_text += " get avg > .8 current " + str(
-            avgs[name].getAverage()
+          label_text += " get avg > .8 current " + toPlaces(
+            avgs[name].getAverage(), 1, 2
           )
-        textSize = 0.6
+        else:
+          color = (0, 255, 0)
+          label_text += (
+            " ready to play ~"
+            + toPlaces(avgs[name].getAverage() * 100, 3, 0)
+            + "% detection rate"
+          )
+        textSize = 0.55
         cv2.putText(
           frame,
           label_text,
-          (x1 - 1, y1 - 30),
+          (5 - 1, y1 - 10),
           cv2.FONT_HERSHEY_SIMPLEX,
           textSize,
           (0, 0, 0),
@@ -550,7 +548,7 @@ while True:
         cv2.putText(
           frame,
           label_text,
-          (x1 + 1, y1 - 30),
+          (5 + 1, y1 - 10),
           cv2.FONT_HERSHEY_SIMPLEX,
           textSize,
           (0, 0, 0),
@@ -560,7 +558,7 @@ while True:
         cv2.putText(
           frame,
           label_text,
-          (x1, y1 - 31),
+          (5, y1 - 11),
           cv2.FONT_HERSHEY_SIMPLEX,
           textSize,
           (0, 0, 0),
@@ -570,7 +568,7 @@ while True:
         cv2.putText(
           frame,
           label_text,
-          (x1, y1 - 29),
+          (5, y1 - 9),
           cv2.FONT_HERSHEY_SIMPLEX,
           textSize,
           (0, 0, 0),
@@ -581,7 +579,7 @@ while True:
         cv2.putText(
           frame,
           label_text,
-          (x1, y1 - 30),
+          (5, y1 - 10),
           cv2.FONT_HERSHEY_SIMPLEX,
           textSize,
           color,
