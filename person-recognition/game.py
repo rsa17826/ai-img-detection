@@ -386,7 +386,13 @@ def updateFacesList():
   global mtcnn, known_norm, resnet, device, db, known_embeddings, known_labels
   try:
     # enroll_faces.init(log, eel.setProg)
-    db = np.load(DB_PATH)
+    if db is not None:
+      db = None # Reset the variable to free memory
+
+    # Rename the database file
+    os.rename(DB_PATH, DB_PATH + "_")
+
+    db = np.load(DB_PATH + "_")
     known_embeddings = db["embeddings"] # shape (N,512)
     known_labels = db["labels"] # shape (N,)
     # load models
@@ -409,7 +415,9 @@ def comstr(item: Any) -> str:
     )
   return re.sub(reg[0], reg[1], str(item))
 
+
 engine = pyttsx3.init()
+
 
 def say(msg):
   def _say():
@@ -419,8 +427,10 @@ def say(msg):
     engine.say(msg)
     engine.runAndWait()
     engine.stop()
+
   log(msg)
   Thread(target=_say).start()
+
 
 # endregion
 
@@ -731,9 +741,6 @@ while True:
   for name, t in lastActiveTimes.copy().items():
     if curr_time - t > 1:
       del lastActiveTimes[name]
-      say(
-        name
-        + " has left the game"
-      )
+      say(name + " has left the game")
 
   send_frame(frame)
