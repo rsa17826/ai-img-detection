@@ -409,7 +409,7 @@ def comstr(item: Any) -> str:
     )
   return re.sub(reg[0], reg[1], str(item))
 
-engine = pyttsx3.init() # Create engine inside the thread
+engine = pyttsx3.init()
 
 def say(msg):
   def _say():
@@ -418,7 +418,7 @@ def say(msg):
       engine.endLoop()
     engine.say(msg)
     engine.runAndWait()
-    engine.stop() # Clean up
+    engine.stop()
 
   Thread(target=_say).start()
 
