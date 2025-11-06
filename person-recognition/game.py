@@ -389,7 +389,9 @@ def updateFacesList():
   global mtcnn, known_norm, resnet, device, known_embeddings, known_labels
   try:
     # enroll_faces.init(log, eel.setProg)
+    log("started loading new file")
     with tempfile.NamedTemporaryFile(delete=False) as temp_db:
+      log(temp_db.name)
       f.write(temp_db.name, f.read(DB_PATH, "", True), True)
       db = np.load(temp_db.name) # Load from the temporary location
 
@@ -400,6 +402,7 @@ def updateFacesList():
     device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
     mtcnn = MTCNN(image_size=160, margin=20, keep_all=True, device=device)
     resnet = InceptionResnetV1(pretrained="vggface2").eval().to(device)
+    log("done loading new file")
   except Exception as e:
     log(e)
   eel.hideProg()
