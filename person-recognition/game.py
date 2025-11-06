@@ -433,9 +433,9 @@ shouldSayNewHighScores: Any = {}
 spawnCount = 0.0
 lastActiveTimes: Any = {}
 while True:
-  if os.path.exists("updateGameUserList"):
+  if os.path.exists("enrolled/updateGameUserList"):
     try:
-      os.remove("updateGameUserList")
+      os.remove("enrolled/updateGameUserList")
       updateFacesList()
     except Exception as e:
       log(e)
