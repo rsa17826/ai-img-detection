@@ -15,6 +15,24 @@ from collections import deque
 from typing import Dict
 
 
+class RecentAverage:
+  def __init__(self, max_size=20):
+    self.values = deque(maxlen=max_size) # Store values with a maximum length
+    self.total = 0 # Sum of values for average calculation
+
+  def registerValue(self, value):
+    if len(self.values) == self.values.maxlen: # Check if deque is full
+      # Subtract the value that will be removed
+      self.total -= self.values[0]
+    self.values.append(value) # Register the new value
+    self.total += value # Update total
+
+  def getAverage(self):
+    if not self.values: # Check if there are no values to average
+      return 0
+    return self.total / len(self.values) # Calculate the average
+
+
 class DecayingAverage:
   def __init__(self):
     self.values = deque() # Store values as (timestamp, value) pairs
@@ -406,7 +424,7 @@ def addFaceToList(val):
 
 # endregion
 faceName = None
-avgs: Dict[str, DecayingAverage] = {}
+avgs: Dict[str, RecentAverage] = {}
 updateFacesList()
 prev_time: float = time.time()
 while True:
@@ -509,22 +527,25 @@ while True:
         # endregion
         if score and name:
           if name not in avgs:
-            avgs[name] = DecayingAverage()
+            avgs[name] = RecentAverage()
           avgs[name].registerValue(score)
           print(avgs[name].getAverage(), name)
         if foundUnknownFace:
           break
-        if avgs[name].count < 10:
+        if len(avgs[name].values) < 10:
           color = (0, 0, 255)
           label_text += (
             " move your face around and show different angles "
-            + str(avgs[name].count)
+            + str(len(avgs[name].values))
             + "/10"
           )
         elif avgs[name].getAverage() < 0.8:
           color = (0, 0, 255)
-          label_text += " get avg > .8 current " + toPlaces(
-            avgs[name].getAverage(), 1, 2
+          label_text += (
+            " get avg > .8 AVG: "
+            + toPlaces(avgs[name].getAverage(), 1, 2)
+            + " - CURRENT: "
+            + toPlaces(score, 1, 2)
           )
         else:
           color = (0, 255, 0)
@@ -532,6 +553,8 @@ while True:
             " ready to play ~"
             + toPlaces(avgs[name].getAverage() * 100, 3, 0)
             + "% detection rate"
+            + " - CURRENT: "
+            + toPlaces(score, 1, 2)
           )
         textSize = 0.55
         cv2.putText(
