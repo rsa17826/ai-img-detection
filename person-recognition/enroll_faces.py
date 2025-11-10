@@ -221,7 +221,7 @@ class Cache:
 
 
 cache: Cache = Cache()
-print(cache.loadFromFile())
+cache.loadFromFile()
 
 
 def init(log, setProg=lambda *a: 1):
