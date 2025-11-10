@@ -2,8 +2,8 @@ import cv2
 import torch
 import numpy as np
 import time
-import pandas as pd
-from facenet_pytorch import MTCNN, InceptionResnetV1
+import pandas as pd # type:ignore
+from facenet_pytorch import MTCNN, InceptionResnetV1 # type:ignore
 import os
 from typing import Any
 import eel
@@ -28,7 +28,7 @@ cap: Any = None
 faceName: Any = None
 # debounce (seconds) to avoid re-logging same person constantly
 DEBOUNCE_SECONDS = 60
-eel.init("web")
+eel.init("../web")
 DB_PATH = "data/embeddings_db.npz"
 ATTEND_LOG = "data/attendance_log.csv"
 BLANK_IMAGE = (
@@ -151,7 +151,7 @@ Thread(
     mode=None, port=15674, close_callback=lambda *x: os._exit(0), shutdown_delay=10
   )
 ).start()
-os.system("start http://127.0.0.1:15674")
+os.system("start http://127.0.0.1:15674/person-recognition.html")
 
 
 # init attendance memory
@@ -195,6 +195,8 @@ def match_identity(embedding_vec):
   cand = embedding_vec / (np.linalg.norm(embedding_vec) + 1e-10)
   # cosine sim = dot product since both normalized
   sims = known_norm.dot(cand) # shape (N,)
+  if not len(sims):
+    return None, None
   best_idx = np.argmax(sims)
   best_score = sims[best_idx]
   best_name = known_labels[best_idx]

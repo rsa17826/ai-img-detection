@@ -2,15 +2,18 @@ import os
 import cv2
 import torch
 import numpy as np
-from facenet_pytorch import MTCNN, InceptionResnetV1
-from typing import Any
+from facenet_pytorch import MTCNN, InceptionResnetV1 # type:ignore
+from typing import Any, Dict
+
+cache: Dict[Any, Any] = {}
 
 
 def init(log, setProg=lambda *a: 1):
   ENROLL_DIR = "enrolled"
   DB_PATH = "data/embeddings_db.npz"
 
-  os.makedirs("enrolled", exist_ok=True)
+  os.makedirs(ENROLL_DIR, exist_ok=True)
+
   # 1. Load face detector + embedder
   device = torch.device("cuda:0" if torch.cuda.is_available() else "cpu")
   mtcnn = MTCNN(image_size=160, margin=0, keep_all=False, device=device)
@@ -29,19 +32,31 @@ def init(log, setProg=lambda *a: 1):
     innerList = os.listdir(person_folder)
     maxProg += len(innerList)
 
+  setProg(prog, maxProg, "")
   for person_name in os.listdir(ENROLL_DIR):
     person_folder = os.path.join(ENROLL_DIR, person_name)
     if not os.path.isdir(person_folder):
       continue
 
-    # log(f"[INFO] Processing {person_name}")
     innerList = os.listdir(person_folder)
 
     for img_file in innerList:
       img_path = os.path.join(person_folder, img_file)
       prog += 1
       setProg(prog, maxProg, person_name)
-      # read image with cv2 (BGR -> RGB)
+
+      # Check if the person is already enrolled
+      if person_name + "/" + img_file in cache:
+        # log(
+        #   f"[INFO] Skipping already processed image for: {person_name} ({img_file})"
+        # )
+
+        person_name, emb = cache[person_name + "/" + img_file]
+        all_embeddings.append(emb)
+        all_labels.append(person_name)
+        continue
+
+      # Read image with cv2 (BGR -> RGB)
       img_bgr = cv2.imread(img_path)
       if img_bgr is None:
         log(f"[WARN] Could not read {img_path}")
@@ -55,7 +70,7 @@ def init(log, setProg=lambda *a: 1):
         os.remove(img_path)
         continue
 
-      # face is a torch tensor [3,160,160]
+      # Face is a torch tensor [3,160,160]
       face = face.unsqueeze(0).to(device) # [1,3,160,160]
 
       # 3. Get embedding (512-d vector)
@@ -65,8 +80,9 @@ def init(log, setProg=lambda *a: 1):
 
       all_embeddings.append(emb)
       all_labels.append(person_name)
+      cache[person_name + "/" + img_file] = [person_name, emb]
 
-  # convert to arrays
+  # Convert to arrays
   all_embeddings = np.array(all_embeddings) if all_embeddings else np.empty((0, 512))
   all_labels = np.array(all_labels) if all_labels else np.empty((0,))
 
@@ -74,5 +90,6 @@ def init(log, setProg=lambda *a: 1):
   os.makedirs("data", exist_ok=True)
   np.savez(DB_PATH, embeddings=all_embeddings, labels=all_labels)
 
-  # log(f'[INFO] Total faces enrolled: {len(all_labels)}')
-  # log(f"[INFO] Saved database to {DB_PATH}")
+  # Log total faces enrolled
+  log(f"[INFO] Total faces enrolled: {len(all_labels)}")
+  log(f"[INFO] Saved database to {DB_PATH}")
