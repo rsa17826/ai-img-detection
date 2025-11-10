@@ -422,7 +422,6 @@ for frameFileName in sorted_files:
 # load all people that are in the video and when in the video they are
 actionList: Dict[int, List[List[Any]]] = {}
 names: set[str] = set()
-
 for line in f.read("./log.txt").split("\n"):
   if line and '"' in line and ".png" in line:
     # Extract the name
@@ -440,23 +439,23 @@ for line in f.read("./log.txt").split("\n"):
       # Extract frame number
       frame_match = re.search(r"(\d+)\.png", line)
       if frame_match:
-        frame: int = int(frame_match.group(1))
+        frame: int = int(frame_match.group(1)) # type: ignore
         foundSameBefore = False
-        if frame - 1 in actionList:
+        if frame - 1 in actionList: # type: ignore
           i = 0
-          for action in actionList[frame - 1]:
+          for action in actionList[frame - 1]: # type: ignore
             if action[0] == name:
-              del actionList[frame - 1][i]
+              del actionList[frame - 1][i] # type: ignore
               foundSameBefore = True
             i += 1
-          if not actionList[frame - 1]:
-            del actionList[(frame - 1)]
+          if not actionList[frame - 1]: # type: ignore
+            del actionList[(frame - 1)] # type: ignore
         # Append the [name, entered] list to actionList
         if not foundSameBefore:
           # Initialize frame list if not present
           if frame not in actionList:
-            actionList[frame] = []
-          actionList[frame].append([name, entered])
+            actionList[frame] = [] # type: ignore
+          actionList[frame].append([name, entered]) # type: ignore
 
 
 def findNextAction(targetFrame, name):
