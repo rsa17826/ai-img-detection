@@ -276,6 +276,7 @@ def init(log, setProg=lambda *a: 1):
       img_bgr = cv2.imread(img_path)
       if img_bgr is None:
         log(f"[WARN] Could not read {img_path}")
+        del cache.lastThing
         continue
       img_rgb = cv2.cvtColor(img_bgr, cv2.COLOR_BGR2RGB)
 
@@ -283,6 +284,7 @@ def init(log, setProg=lambda *a: 1):
       face = mtcnn(img_rgb)
       if face is None:
         log(f"[WARN] No face found in {img_path}")
+        del cache.lastThing
         os.remove(img_path)
         continue
 
