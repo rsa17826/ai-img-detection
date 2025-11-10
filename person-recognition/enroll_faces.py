@@ -33,7 +33,7 @@ class Cache:
     del self.lastThing
 
   def saveToFile(self):
-    os.makedirs("./cache", exist_ok=True)
+    os.makedirs("./.cache", exist_ok=True)
 
     def serialize(data):
       if isinstance(data, np.ndarray):
@@ -50,7 +50,7 @@ class Cache:
 
     formatted_cache = {key: serialize(val) for key, val in self.__cache__.items()}
 
-    with open(f"./cache/{self.name}", "w") as f:
+    with open(f"./.cache/{self.name}", "w") as f:
       for key, item in formatted_cache.items():
         # Convert the item dictionary to a string representation
         f.write(
@@ -58,10 +58,10 @@ class Cache:
         ) # Use str() to safely convert the dict to a string
 
   def loadFromFile(self) -> bool:
-    os.makedirs("./cache", exist_ok=True)
+    os.makedirs("./.cache", exist_ok=True)
     self.__cache__ = {}
 
-    cache_file = f"./cache/{self.name}"
+    cache_file = f"./.cache/{self.name}"
     if os.path.exists(cache_file):
       try:
         with open(cache_file, "r") as f:
