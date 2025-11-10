@@ -28,11 +28,12 @@
             position: "fixed",
             top: "0",
             left: 0,
-            border: "30px solid #999",
-            backgroundColor: "black",
+            border: "30px solid #9997",
+            backgroundColor: "#0007",
             color: "white",
             width: "calc(100vw - 60px)",
             height: "29px",
+            pointerEvents: "none",
           },
           [
             (this.progresstext = a.newelem("div", {
@@ -40,7 +41,7 @@
               height: "20px",
             })),
             (this.progressbar = a.newelem("div", {
-              backgroundColor: "#777",
+              backgroundColor: "#7777",
               width: "100%",
               height: "10px",
             })),

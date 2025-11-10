@@ -386,6 +386,9 @@ def collides(x, y, w, h, face):
   return not (x >= x2 + w2 or x + w <= x2 or y >= y2 + h2 or y + h <= y2)
 
 
+known_labels: Any = []
+
+
 @eel.expose
 def updateFacesList():
   global mtcnn, known_norm, resnet, device, db, known_embeddings, known_labels
@@ -492,11 +495,20 @@ while True:
         # endregion
         # region capture face
         if (
-          name
-          and score
-          and score < TARGET_CONFIDENCE
-          and score > MATCH_THRESHOLD
-        ) or (faceName and foundUnknownFace and not name):
+          (
+            name
+            and score
+            and score < TARGET_CONFIDENCE
+            and score > MATCH_THRESHOLD
+          )
+          or (
+            faceName
+            and foundUnknownFace
+            and not name
+            and faceName not in known_labels
+          )
+          or (faceName and name and faceName == name)
+        ):
           send_frame(frame)
           if not name:
             name = faceName
