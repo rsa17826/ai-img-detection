@@ -210,7 +210,7 @@ eel.init("../web")
 
 # Variable to hold the capture object; initially set to 0
 cap: Any = 0
-MATCH_THRESHOLD = 0.55
+MATCH_THRESHOLD = 0.65
 DB_PATH = "data/embeddings_db.npz"
 TARGET_CONFIDENCE = 0.7
 mtcnn: Any = None
