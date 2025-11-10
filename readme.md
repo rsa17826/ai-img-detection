@@ -183,7 +183,7 @@ ai-img-detection/
 
 ## Getting Started
 
-1. run this in powershell after installing visual studio build tools with desktop development with c++, python 3.13, and python 3.9.13, and ffmpeg if using the "from video" script
+1. run this in powershell after installing visual studio build tools with desktop development with c++, cmake, python 3.13, and python 3.9.13, and ffmpeg if using the "from video" script
 
 2. run
 
