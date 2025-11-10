@@ -4,8 +4,224 @@ import torch
 import numpy as np
 from facenet_pytorch import MTCNN, InceptionResnetV1 # type:ignore
 from typing import Any, Dict
+import json
+from pathlib import Path
 
-cache: Dict[Any, Any] = {}
+
+# F
+class f:
+  @staticmethod
+  def read(
+    file,
+    default="",
+    asbinary=False,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    if Path(file).exists():
+      with open(
+        file,
+        "r" + ("b" if asbinary else ""),
+        buffering=buffering,
+        encoding=encoding,
+        errors=errors,
+        newline=newline,
+        closefd=closefd,
+        opener=opener,
+      ) as f:
+        text = f.read()
+      if text:
+        return text
+      return default
+    else:
+      with open(
+        file,
+        "w" + ("b" if asbinary else ""),
+        buffering=buffering,
+        encoding=encoding,
+        errors=errors,
+        newline=newline,
+        closefd=closefd,
+        opener=opener,
+      ) as f:
+        f.write(default)
+      return default
+
+  @staticmethod
+  def writeCsv(file, rows):
+    with open(file, "w", encoding="utf-8", newline="") as f:
+      w = csv.writer(f)
+      w.writerows(rows)
+    return rows
+
+  @staticmethod
+  def write(
+    file,
+    text,
+    asbinary=False,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    with open(
+      file,
+      "w" + ("b" if asbinary else ""),
+      buffering=buffering,
+      encoding=encoding,
+      errors=errors,
+      newline=newline,
+      closefd=closefd,
+      opener=opener,
+    ) as f:
+      f.write(text)
+    return text
+
+  @staticmethod
+  def append(
+    file,
+    text,
+    asbinary=False,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    with open(
+      file,
+      "a",
+      buffering=buffering,
+      encoding=encoding,
+      errors=errors,
+      newline=newline,
+      closefd=closefd,
+      opener=opener,
+    ) as f:
+      f.write(text)
+    return text
+
+  @staticmethod
+  def writeline(
+    file,
+    text,
+    buffering: int = -1,
+    encoding: Any = None,
+    errors: Any = None,
+    newline: Any = None,
+    closefd: bool = True,
+    opener=None,
+  ):
+    with open(
+      file,
+      "a",
+      buffering=buffering,
+      encoding=encoding,
+      errors=errors,
+      newline=newline,
+      closefd=closefd,
+      opener=opener,
+    ) as f:
+      f.write("\n" + text)
+    return text
+
+
+class Cache:
+  def __init__(self, name="cache"):
+    self.__cache__ = {}
+    self.name = name
+
+  def has(self, thing):
+    if hasattr(self, "lastThing"):
+      raise Exception("[ERROR]: should not have last thing")
+    self.lastThing = thing
+    return thing in self.__cache__
+
+  def get(self):
+    if not hasattr(self, "lastThing"):
+      raise Exception("[ERROR]: should have last thing")
+    data = self.__cache__[self.lastThing]
+    del self.lastThing
+    return data
+
+  def set(self, val):
+    if not hasattr(self, "lastThing"):
+      raise Exception("[ERROR]: should have last thing")
+    self.__cache__[self.lastThing] = val
+    del self.lastThing
+
+  def saveToFile(self):
+    os.makedirs("./cache", exist_ok=True)
+
+    def serialize(data):
+      if isinstance(data, np.ndarray):
+        return {"type": "ndarray", "data": data.tolist()}
+      elif isinstance(data, dict):
+        return {
+          "type": "dict",
+          "data": {key: serialize(value) for key, value in data.items()},
+        }
+      elif isinstance(data, list):
+        return {"type": "list", "data": [serialize(item) for item in data]}
+      else:
+        return {"type": type(data).__name__, "data": data}
+
+    formatted_cache = {key: serialize(val) for key, val in self.__cache__.items()}
+
+    with open(f"./cache/{self.name}", "w") as f:
+      for key, item in formatted_cache.items():
+        # Convert the item dictionary to a string representation
+        f.write(
+          f"{key}: {str(item)}\n"
+        ) # Use str() to safely convert the dict to a string
+
+  def loadFromFile(self) -> bool:
+    os.makedirs("./cache", exist_ok=True)
+    self.__cache__ = {}
+
+    cache_file = f"./cache/{self.name}"
+    if os.path.exists(cache_file):
+      try:
+        with open(cache_file, "r") as f:
+          for line in f:
+            key, value_str = line.strip().split(": ", 1)
+
+            # Use safer parsing instead of eval
+            value_data = eval(
+              value_str
+            ) # Still risky; consider a safer parsing method
+
+            def deserialize(data):
+              if isinstance(data, dict) and "type" in data:
+                if data["type"] == "ndarray":
+                  return np.array(data["data"])
+                elif data["type"] == "dict":
+                  return {
+                    k: deserialize(v)
+                    for k, v in data["data"].items()
+                  }
+                elif data["type"] == "list":
+                  return [deserialize(item) for item in data["data"]]
+              return data["data"]
+
+            self.__cache__[key] = deserialize(value_data)
+
+        return True
+      except Exception as e:
+        print(f"Loading error: {e}")
+        return False
+    return False
+
+
+cache: Cache = Cache()
+print(cache.loadFromFile())
 
 
 def init(log, setProg=lambda *a: 1):
@@ -46,12 +262,12 @@ def init(log, setProg=lambda *a: 1):
       setProg(prog, maxProg, person_name)
 
       # Check if the person is already enrolled
-      if person_name + "/" + img_file in cache:
+      if cache.has(person_name + "/" + img_file):
         # log(
         #   f"[INFO] Skipping already processed image for: {person_name} ({img_file})"
         # )
 
-        person_name, emb = cache[person_name + "/" + img_file]
+        person_name, emb = cache.get()
         all_embeddings.append(emb)
         all_labels.append(person_name)
         continue
@@ -80,7 +296,7 @@ def init(log, setProg=lambda *a: 1):
 
       all_embeddings.append(emb)
       all_labels.append(person_name)
-      cache[person_name + "/" + img_file] = [person_name, emb]
+      cache.set([person_name, emb])
 
   # Convert to arrays
   all_embeddings = np.array(all_embeddings) if all_embeddings else np.empty((0, 512))
@@ -93,3 +309,4 @@ def init(log, setProg=lambda *a: 1):
   # Log total faces enrolled
   log(f"[INFO] Total faces enrolled: {len(all_labels)}")
   log(f"[INFO] Saved database to {DB_PATH}")
+  cache.saveToFile()

@@ -1,18 +1,18 @@
+import os
+print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import cv2
 import torch
 import numpy as np
 import time
 import pandas as pd # type:ignore
 from facenet_pytorch import MTCNN, InceptionResnetV1 # type:ignore
-import os
 from typing import Any
 import eel
 from threading import Thread
 import base64, time
 import enroll_faces
 
-print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
 # Index of the camera to use
 capidx = 0
 os.makedirs("data", exist_ok=True)
