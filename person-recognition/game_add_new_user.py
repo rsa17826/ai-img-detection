@@ -1,3 +1,7 @@
+import os
+
+print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import torch
 import cv2
 from typing import Any
@@ -5,7 +9,7 @@ import random, time, re
 from biasRand import BalancedRand
 import eel
 from threading import Thread
-import os, base64
+import base64
 import enroll_faces
 from facenet_pytorch import MTCNN, InceptionResnetV1 # type: ignore
 import numpy as np

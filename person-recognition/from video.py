@@ -1,11 +1,12 @@
+import os
+
+print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import cv2
 import torch
 import numpy as np
 import time
-
-# import pandas as pd
-from facenet_pytorch import MTCNN, InceptionResnetV1
-import os
+from facenet_pytorch import MTCNN, InceptionResnetV1 # type:ignore
 from typing import Any
 import eel
 from threading import Thread
@@ -15,6 +16,7 @@ import subprocess, sys, shutil
 from pathlib import Path
 import re, hashlib
 from typing import Dict, List
+
 
 # F
 class f:
@@ -232,6 +234,7 @@ def match_identity(embedding_vec):
     return best_name, float(best_score)
   else:
     return None, None
+
 
 sys.argv.append(f.read("./lastFile"))
 # print(sys.argv)
@@ -548,8 +551,8 @@ for frameFileName in sorted_files:
       if nextActionFrame in actionList:
         nea = None
         for thing in actionList[nextActionFrame]:
-          if thing[0]==personName:
-            nea=thing
+          if thing[0] == personName:
+            nea = thing
             break
         assert nea is not None
         activeActions[personName]["entered"] = nea[1]

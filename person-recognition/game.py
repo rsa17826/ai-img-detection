@@ -1,4 +1,8 @@
 # region imports
+import os
+
+print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
+os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import torch
 import cv2
 from typing import Any
@@ -13,13 +17,9 @@ import numpy as np
 from pathlib import Path
 import pyttsx3 # type: ignore
 
+
 # endregion
 # region start
-
-print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
-os.chdir(os.path.dirname(os.path.abspath(__file__)))
-
-
 # normalize known vectors for cosine sim
 def l2norm(x):
   return x / (np.linalg.norm(x, axis=1, keepdims=True) + 1e-10)

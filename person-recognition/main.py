@@ -1,4 +1,5 @@
 import os
+
 print("changing dir to ", os.path.dirname(os.path.abspath(__file__)))
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
 import cv2
@@ -144,6 +145,7 @@ def updateFacesList():
   except Exception as e:
     log(e)
   eel.hideProg()
+
 
 # Start the Eel application in a new thread
 Thread(
